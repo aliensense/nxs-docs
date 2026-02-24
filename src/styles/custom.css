@@ -1,0 +1,116 @@
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap');
+
+:root {
+	--sl-font: 'Manrope';
+	--sl-line-height: 1.7;
+	--sl-line-height-headings: 1.2;
+	--sl-color-accent: #b91c1c;
+	--sl-color-accent-low: #3b0a0a;
+	--sl-color-accent-high: #fee2e2;
+	--sl-nav-height: 4.1rem;
+	--sl-content-width: 49rem;
+}
+
+:root[data-theme='dark'] {
+	--sl-color-black: #070b14;
+	--sl-color-bg: #070b14;
+	--sl-color-bg-nav: #0b1220;
+	--sl-color-bg-sidebar: #0b1220;
+	--sl-color-gray-6: #101827;
+	--sl-color-gray-5: #1f2937;
+	--sl-color-gray-4: #334155;
+	--sl-color-gray-3: #94a3b8;
+	--sl-color-gray-2: #cbd5e1;
+	--sl-color-gray-1: #f1f5f9;
+	--sl-color-hairline-light: #1f2937;
+	--sl-color-hairline-shade: #070b14;
+}
+
+:root[data-theme='light'] {
+	--sl-color-bg: #f8fafc;
+	--sl-color-bg-nav: #ffffff;
+	--sl-color-bg-sidebar: #ffffff;
+	--sl-color-gray-7: #f8fafc;
+	--sl-color-gray-6: #e2e8f0;
+	--sl-color-gray-5: #cbd5e1;
+	--sl-color-gray-4: #64748b;
+	--sl-color-gray-3: #475569;
+	--sl-color-gray-2: #1e293b;
+	--sl-color-gray-1: #0f172a;
+	--sl-color-hairline-light: #e2e8f0;
+	--sl-color-hairline-shade: #e2e8f0;
+	--sl-color-accent-low: #fee2e2;
+	--sl-color-accent-high: #991b1b;
+}
+
+:root h1,
+:root h2,
+:root h3,
+:root h4,
+:root h5,
+:root .site-title {
+	font-family: 'Space Grotesk', 'Manrope', sans-serif;
+	letter-spacing: -0.015em;
+}
+
+:root .site-title {
+	font-weight: 700;
+}
+
+:root .card,
+:root .sl-link-card {
+	border-radius: 0.9rem;
+	border: 1px solid color-mix(in srgb, var(--sl-color-accent) 14%, var(--sl-color-hairline-light));
+	background: color-mix(in srgb, var(--sl-color-bg-nav) 92%, white);
+	box-shadow: 0 14px 30px -26px rgba(127, 29, 29, 0.35);
+}
+
+:root .card:hover,
+:root .sl-link-card:hover {
+	border-color: color-mix(in srgb, var(--sl-color-accent) 36%, var(--sl-color-hairline-light));
+}
+
+:root .hero {
+	background:
+		radial-gradient(circle at 20% 10%, color-mix(in srgb, var(--sl-color-accent) 32%, transparent), transparent 35%),
+		radial-gradient(circle at 80% 10%, color-mix(in srgb, #475569 16%, transparent), transparent 40%);
+	border-radius: 1.2rem;
+	padding: clamp(1.4rem, 2.2vw, 2rem);
+	border: 1px solid color-mix(in srgb, var(--sl-color-accent) 20%, var(--sl-color-hairline-light));
+}
+
+:root .pagination-links a {
+	border-radius: 0.8rem;
+}
+
+:root .social-icons a {
+	opacity: 0.95;
+}
+
+:root .expressive-code {
+	border-radius: 0.85rem;
+}
+
+:root .right-sidebar-panel {
+	border-inline-start: 1px solid var(--sl-color-hairline-light);
+}
+
+:root .search-dialog,
+:root .search-input,
+:root .site-search {
+	border-radius: 0.85rem;
+}
+
+:root .site-search {
+	min-width: min(34rem, 56vw);
+}
+
+@media (max-width: 50rem) {
+	:root .hero {
+		border-radius: 0.9rem;
+	}
+
+	:root .site-search {
+		min-width: 0;
+	}
+}

@@ -1,74 +1,53 @@
 # RedBrain Docs
 
-Documentation website source for the RedBrain robotics compute platform.
+Public documentation for the RedBrain robotics computing platform.
+Built with [Astro Starlight](https://starlight.astro.build/).
 
-## Stack
-
-- **Current framework:** Astro Starlight
-- **Target deployment:** GitHub Pages via GitHub Actions
-- **Migration posture:** Content is kept framework-neutral enough to move to Mintlify with minimal rewrite.
-
-## Run locally
+## Local development
 
 ```bash
+# Install dependencies
 npm install
+
+# Start dev server (http://localhost:4321)
 npm run dev
-```
 
-Build production output:
-
-```bash
+# Build for production
 npm run build
+
+# Preview production build
 npm run preview
 ```
 
-## Repository layout
+## Adding content
 
-```text
-.
-├── .github/workflows/         # CI/CD (build, PR status, deploy)
-├── src/
-│   ├── assets/diagrams/       # Board and connection diagrams
-│   ├── components/            # Small Starlight overrides (theme behavior)
-│   ├── content/docs/          # All documentation pages
-│   │   ├── getting-started/
-│   │   ├── hardware/
-│   │   ├── guides/
-│   │   ├── reference/
-│   │   ├── faq.md
-│   │   └── index.mdx
-│   └── styles/global.css      # Tailwind + shared visual tokens
-├── astro.config.mjs
-└── package.json
+Pages live in `src/content/docs/`. Create `.md` or `.mdx` files with frontmatter:
+
+```md
+---
+title: Your Page Title
+description: Brief description for SEO and link previews.
+---
 ```
 
-## Content conventions
+Sidebar navigation is configured in `astro.config.mjs`.
 
-- One topic per file.
-- Use relative links, for example: `../reference/connectors/`.
-- Keep connector pinouts and consolidated tables in `reference/`; hardware pages should link instead of duplicating.
-- Prefer practical instructions over internal design details.
-- Use `<details>` for large tables and long pin maps.
-- Image paths should point to `src/assets/diagrams/` using relative Markdown paths.
+Images go in `src/assets/diagrams/` and are referenced as:
 
-## Edit workflow
-
-1. Add or update pages in `src/content/docs`.
-2. Keep sidebar entries in `astro.config.mjs` in sync with page slugs.
-3. Run `npm run build` before pushing.
+```md
+![Alt text](../../assets/diagrams/filename.png)
+```
 
 ## Deployment
 
-- Pushes to `main` run build + deploy to GitHub Pages.
-- Pull requests run preview build checks and get a status comment on the PR.
+Pushes to `main` trigger a GitHub Actions workflow that builds the site and deploys to GitHub Pages.
 
-## Mintlify vs Starlight migration
+## Project structure
 
-| Area | Starlight today | Mintlify migration impact |
-| --- | --- | --- |
-| Content files | Markdown/MDX in `src/content/docs` | Reuse most Markdown with frontmatter and component syntax adjustments |
-| Navigation | `astro.config.mjs` sidebar object | Move structure to `docs.json` |
-| Components | Starlight components (`Card`, `Tabs`, `Aside`) | Replace with Mintlify MDX components or plain Markdown patterns |
-| Search | Built-in Pagefind | Mintlify hosted search (no local index job) |
-| Build/Deploy | Astro build + GitHub Pages workflow | Mintlify deploy flow or static export pipeline |
-
+```text
+src/content/docs/     -> Documentation pages (Markdown / MDX)
+src/assets/           -> Images and diagrams
+src/styles/custom.css -> Theme customizations
+astro.config.mjs      -> Starlight + site configuration
+public/               -> Static assets (favicon, robots.txt)
+```

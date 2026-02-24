@@ -1,0 +1,89 @@
+---
+title: RedBrain Docs
+description: Documentation for bringing up RedBrain hardware and integrating robotics sensors, cameras, and control.
+template: splash
+hero:
+  tagline: Modular robotics compute and perception stack for real robots
+  actions:
+    - text: Start in 30 Minutes
+      link: /getting-started/quickstart/
+    - text: Browse Hardware
+      link: /hardware/
+    - text: API Reference
+      link: /reference/
+---
+
+import { Aside, Card, CardGrid, LinkCard, Steps, Tabs, TabItem } from '@astrojs/starlight/components';
+
+## What Is RedBrain
+
+RedBrain is a modular robotics computing platform designed to get perception and control online quickly.
+
+- **Cerebrum** carrier board hosts NVIDIA Jetson Orin Nano/NX.
+- **Thalamus A/B** extension boards handle multi-camera GMSL ingest, CAN-FD, sync, and edge MCU orchestration.
+- **Axon** sensor adapter adds mikroBUS-based IMU/GNSS expansion near cameras.
+- **Synapse** is RedBrain's control protocol for configuration, state, and firmware coordination between Jetson and MCUs.
+
+<Aside type="note" title="First-time setup">
+Start with the [Quickstart](/getting-started/quickstart/) if you have hardware in hand. You can complete an end-to-end bring-up in about 30 minutes.
+</Aside>
+
+## Explore RedBrain
+
+<CardGrid>
+	<LinkCard title="Getting Started" href="/getting-started/overview/">
+		Unbox, wire, boot, and validate baseline camera and ROS 2 bring-up.
+	</LinkCard>
+	<LinkCard title="Hardware" href="/hardware/">
+		Board-level docs for Cerebrum, Thalamus A/B, and Axon.
+	</LinkCard>
+	<LinkCard title="Guides" href="/guides/camera-setup/">
+		Task-based guides for cameras, IMU, GNSS, firmware updates, and Go2 integration.
+	</LinkCard>
+	<LinkCard title="API Reference" href="/reference/ros-topics/">
+		ROS topic catalog, connectors, and consolidated specifications.
+	</LinkCard>
+</CardGrid>
+
+## Typical Workflow
+
+<Steps>
+1. Install the Jetson module on Cerebrum and connect Thalamus/Axon boards.
+2. Connect cameras and sensors, then apply your baseline `rb_config.yaml`.
+3. Verify camera streams, IMU topics, and synchronization status.
+4. Add robot control integration (for example Unitree Go2) with safety gates enabled.
+</Steps>
+
+## Build for Your Role
+
+<Tabs>
+	<TabItem label="Perception Engineer">
+		<Card title="Goal">
+		Bring up stereo cameras and IMU quickly, verify timestamps, and feed VSLAM.
+		</Card>
+		
+		Start with:
+		- [Quickstart](/getting-started/quickstart/)
+		- [Camera Setup](/guides/camera-setup/)
+		- [IMU Integration](/guides/imu-integration/)
+	</TabItem>
+	<TabItem label="System Integrator">
+		<Card title="Goal">
+		Connect RedBrain to robot buses, maintain firmware, and manage field reconfiguration.
+		</Card>
+
+		Start with:
+		- [Architecture](/getting-started/architecture/)
+		- [Configuration](/guides/configuration/)
+		- [Firmware Update](/guides/firmware-update/)
+	</TabItem>
+	<TabItem label="Robot Controls">
+		<Card title="Goal">
+		Consume RedBrain odometry and sensor outputs to drive safe, repeatable robot behavior.
+		</Card>
+
+		Start with:
+		- [ROS Topics](/reference/ros-topics/)
+		- [Unitree Go2 Integration](/guides/unitree-go2/)
+	</TabItem>
+</Tabs>
