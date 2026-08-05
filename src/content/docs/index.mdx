@@ -1,0 +1,46 @@
+---
+title: NXS Docs
+description: Documentation for the Aliensense NXS sensor co-processor.
+template: splash
+hero:
+  tagline: Plug in a sensor, upload a driver, read SI units on the wire
+  actions:
+    - text: Get started
+      link: /getting-started/overview/
+    - text: Hardware
+      link: /hardware/product-description/
+    - text: Reference
+      link: /reference/nxs-datasheet/
+---
+
+import { Aside, Card, CardGrid, LinkCard } from '@astrojs/starlight/components';
+
+## What NXS is
+
+NXS is a sensor co-processor module. It runs sensor drivers as sandboxed
+bytecode on an on-device virtual machine and serves SI-unit samples to a
+host over I²C, UART (Cyphal/serial), or CAN-FD (Cyphal/CAN). Drivers are
+uploaded at runtime — no firmware rebuild per sensor — and every output
+field is self-described, so a host decodes any sensor without
+sensor-specific code.
+
+<CardGrid>
+	<LinkCard title="Getting Started" href="/getting-started/overview/">
+		Install the host tool, probe the device, stream your first samples.
+	</LinkCard>
+	<LinkCard title="Hardware" href="/hardware/product-description/">
+		The NXS assembly: compute board, GMSL serializer, connectors,
+		ratings, mechanical.
+	</LinkCard>
+	<LinkCard title="Reference" href="/reference/nxs-datasheet/">
+		The released specification set: datasheet, host interface,
+		integration manual, driver development guide.
+	</LinkCard>
+</CardGrid>
+
+<Aside type="note" title="Driver generation">
+	Any mikroBUS-attachable sensor with a datasheet is a driver candidate:
+	the SDK ships an AI driver-generation skill that reads the datasheet and
+	produces a validated driver. See the driver development guide in the
+	Reference section.
+</Aside>

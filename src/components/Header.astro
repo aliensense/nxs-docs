@@ -1,0 +1,119 @@
+---
+import config from 'virtual:starlight/user-config';
+
+import LanguageSelect from 'virtual:starlight/components/LanguageSelect';
+import Search from 'virtual:starlight/components/Search';
+import SiteTitle from 'virtual:starlight/components/SiteTitle';
+import SocialIcons from 'virtual:starlight/components/SocialIcons';
+import ThemeSelect from 'virtual:starlight/components/ThemeSelect';
+
+const baseUrl = import.meta.env.BASE_URL;
+const currentPath = Astro.url.pathname;
+
+const navLinks = [
+	{ label: 'Guides', href: `${baseUrl}guides/`, activePrefix: `${baseUrl}guides/` },
+	{ label: 'Hardware', href: `${baseUrl}hardware/`, activePrefix: `${baseUrl}hardware/` },
+	{ label: 'API Reference', href: `${baseUrl}reference/`, activePrefix: `${baseUrl}reference/` },
+];
+
+const shouldRenderSearch =
+	config.pagefind || config.components.Search !== '@astrojs/starlight/components/Search.astro';
+---
+
+<div class="header">
+	<div class="title-wrapper sl-flex">
+		<SiteTitle />
+	</div>
+	<nav class="top-links sl-hidden lg:sl-flex" aria-label="Primary navigation">
+		{
+			navLinks.map((link) => (
+				<a
+					href={link.href}
+					class:list={[
+						'top-link',
+						currentPath.startsWith(link.activePrefix) && 'active',
+					]}
+				>
+					{link.label}
+				</a>
+			))
+		}
+	</nav>
+	<div class="search-wrapper sl-flex print:hidden">
+		{shouldRenderSearch && <Search />}
+	</div>
+	<div class="sl-hidden md:sl-flex print:hidden right-group">
+		<div class="sl-flex social-icons">
+			<SocialIcons />
+		</div>
+		<ThemeSelect />
+		<LanguageSelect />
+	</div>
+</div>
+
+<style>
+	@layer starlight.core {
+		.header {
+			display: flex;
+			gap: var(--sl-nav-gap);
+			justify-content: space-between;
+			align-items: center;
+			height: 100%;
+		}
+
+		.title-wrapper {
+			overflow: clip;
+			padding: 0.25rem;
+			margin: -0.25rem;
+			min-width: 0;
+		}
+
+		.top-links {
+			align-items: center;
+			gap: 0.5rem;
+		}
+
+		.top-link {
+			color: var(--sl-color-gray-3);
+			text-decoration: none;
+			font-size: 0.9rem;
+			font-weight: 600;
+			line-height: 1;
+			padding: 0.55rem 0.75rem;
+			border-radius: 999px;
+			border: 1px solid transparent;
+			transition: color 180ms ease, border-color 180ms ease, background-color 180ms ease;
+		}
+
+		.top-link:hover,
+		.top-link.active {
+			color: var(--sl-color-text);
+			background: color-mix(in srgb, var(--sl-color-accent) 10%, transparent);
+			border-color: color-mix(in srgb, var(--sl-color-accent) 32%, transparent);
+		}
+
+		.search-wrapper {
+			flex: 1;
+			justify-content: center;
+			min-width: 12rem;
+		}
+
+		.right-group,
+		.social-icons {
+			gap: 1rem;
+			align-items: center;
+		}
+
+		.social-icons::after {
+			content: '';
+			height: 2rem;
+			border-inline-end: 1px solid var(--sl-color-hairline-light);
+		}
+
+		@media (max-width: 63.99rem) {
+			.search-wrapper {
+				justify-content: flex-end;
+			}
+		}
+	}
+</style>
