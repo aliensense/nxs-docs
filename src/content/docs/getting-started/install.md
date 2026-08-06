@@ -44,5 +44,5 @@ and loads it onto the VM. `stream` decodes live samples using the
 device's self-description — SI units, no per-sensor host code.
 
 Transport selection, addresses, and per-transport wiring are the
-Integration & Operation Manual's first chapter, in the
-[Reference](/reference/nxs-integration-manual/) section.
+Integration & Operation Manual's first chapter; the manual ships with
+the SDK release bundle.

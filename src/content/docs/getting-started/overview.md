@@ -18,11 +18,11 @@ Working with NXS takes three pieces:
 
 The documentation set splits the same way:
 
-- [Install](/getting-started/install/) puts the host tool on your machine
+- [Install](install.md) puts the host tool on your machine
   and makes first contact with the unit.
-- The [Hardware](/hardware/product-description/) section is the physical
+- The [Hardware](../hardware/product-description.md) section is the physical
   reference: boards, connectors, electrical characteristics, mechanical.
-- The [Reference](/reference/nxs-datasheet/) section is the released
+- The reference set is the released
   specification set — the host interface (registers, commands,
   procedures), the integration and operation manual, and the driver
   development guide. It is mirrored from the firmware release, so it
