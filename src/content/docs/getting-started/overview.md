@@ -18,9 +18,9 @@ Working with NXS takes three pieces:
 
 The documentation set splits the same way:
 
-- [Install](install.md) puts the host tool on your machine
+- [Install](../install/) puts the host tool on your machine
   and makes first contact with the unit.
-- The [Hardware](../hardware/product-description.md) section is the physical
+- The [Hardware](../../hardware/product-description/) section is the physical
   reference: boards, connectors, electrical characteristics, mechanical.
 - The reference set is the released
   specification set — the host interface (registers, commands,
