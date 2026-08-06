@@ -97,7 +97,7 @@ A driver is a short, human-readable Python description of the sensor — the AI-
 - AI driver generation — drivers are authored against a public DSL, with AI-assisted generation from the sensor datasheet as the primary flow (any mikroBUS Click sensor on I²C / SPI / UART / AN / PWM)
 - Cyphal node — standard SI output subjects (acceleration, angular velocity, magnetic field, temperature, pressure) decodable with stock OpenCyphal tooling (yakut / pycyphal), plus liveness heartbeat and device info
 
-The full integration-grade documentation — register map, Cyphal node model, commissioning, driver DSL — is the released specification set in [`firmware/`](firmware/).
+The full integration-grade documentation — register map, Cyphal node model, commissioning, driver DSL — is the released specification set in [the Reference section](../reference/).
 
 ---
 

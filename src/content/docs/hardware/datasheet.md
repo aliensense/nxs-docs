@@ -154,7 +154,7 @@ The coax connector (X2) carries both the GMSL high-speed signal and the 12 V sup
 
 The STM32 on the NXS compute board runs a **smart-sensor co-processor**: it acquires a sensor (the mikroBUS add-on or an onboard I²C/SPI part), converts the raw data to physical **SI units** on-device, and reports the result to a host. It is reachable **two ways** from one firmware image: an **I²C register map** — the low-friction path that rides the GMSL I²C tunnel over the existing coax, needing no additional bus — and a standards-compliant **Cyphal** node over CAN-FD or serial, decodable by stock OpenCyphal tooling. It is **field-updatable** over either, and supports **multiple nodes on one bus**.
 
-This chapter is an overview. The normative contract — registers, commands, wire formats, procedures — is the released specification set mirrored under [`firmware/`](firmware/): the [Interface Description](firmware/nxs-host-interface.md), the [Integration & Operation Manual](firmware/nxs-integration-manual.md), and the [Driver Development Guide](firmware/nxs-driver-development.md).
+This chapter is an overview. The normative contract — registers, commands, wire formats, procedures — is the released specification set mirrored in [the Reference section](../reference/): the Interface Description, the Integration & Operation Manual, and the Driver Development Guide.
 
 ### 4.1 Device model
 
@@ -192,7 +192,7 @@ Multiple NXS nodes coexist on one CAN-FD bus. A board carries a fixed globally-u
 
 > Automatic plug-and-play node-ID allocation (Cyphal PnP) is not yet implemented; the persisted static node-ID plus commissioning covers a multi-node bus, and the anonymous sentinel is the reserved seam for PnP.
 
-Normative: the commissioning record, registers, and Save semantics in the [Interface Description](firmware/nxs-host-interface.md).
+Normative: the commissioning record, registers, and Save semantics in the [Interface Description](../reference/).
 
 ### 4.4 Data output & standard SI projection
 
@@ -220,7 +220,7 @@ Three vendor services expose the descriptor metadata on Cyphal (the same data th
 
 Both factors are live on write and persisted by Save.
 
-**Timestamps and host time.** Every timestamp is the device's monotonic microsecond clock. A two-way sync surface on every transport lets a host measure the device-to-host clock offset with a bounded error and translate acquisition timestamps into its own time domain — the ROS 2 bridge's synced-stamp mode does this automatically. Normative: the [Interface Description](firmware/nxs-host-interface.md).
+**Timestamps and host time.** Every timestamp is the device's monotonic microsecond clock. A two-way sync surface on every transport lets a host measure the device-to-host clock offset with a bounded error and translate acquisition timestamps into its own time domain — the ROS 2 bridge's synced-stamp mode does this automatically. Normative: the [Interface Description](../reference/).
 
 ### 4.5 Sensor drivers
 
@@ -228,7 +228,7 @@ A driver is authored as a Python class (datasheet as code). Class attributes dec
 
 The measure loop reads the sensor over I²C, SPI, or UART. Reads may be single-register or burst, with signed and little-endian scalar decoding and bounded control flow, or through the part's **on-chip FIFO** for high-rate acquisition without torn samples. It can also sample the mikroBUS **AN** pad (`read_analog`) and drive the **PWM** pad (`drive_pwm`, frequency and duty retunable at runtime as live parameters). A driver may declare up to **3 communication profiles** (e.g. an I²C profile and an SPI profile): the module picks the profile matching the wired bus at upload, and the `bus` parameter switches it at runtime — one driver, either bus, no recompile.
 
-The driver layer is **descriptive, readable, and yours to edit** — that is the point of the design. The **AI-agent skill writes the driver from the sensor's datasheet**: bus access, identity check, configuration, compensation math, and output descriptors come out as a short Python file an engineer reviews and modifies directly — change a register default, add an output field, retune a parameter set — with no firmware work. Eight hardware-validated drivers ship with the host package as worked examples (among them the IAM-20680 IMU and the FXOS8700 eCompass), and the driver-generation skill shipped with the product is the reference implementation of the authoring flow. Adding a sensor needs no firmware rebuild and no device return. Normative: the [Driver Development Guide](firmware/nxs-driver-development.md).
+The driver layer is **descriptive, readable, and yours to edit** — that is the point of the design. The **AI-agent skill writes the driver from the sensor's datasheet**: bus access, identity check, configuration, compensation math, and output descriptors come out as a short Python file an engineer reviews and modifies directly — change a register default, add an output field, retune a parameter set — with no firmware work. Eight hardware-validated drivers ship with the host package as worked examples (among them the IAM-20680 IMU and the FXOS8700 eCompass), and the driver-generation skill shipped with the product is the reference implementation of the authoring flow. Adding a sensor needs no firmware rebuild and no device return. Normative: the [Driver Development Guide](../reference/).
 
 ### 4.6 Firmware update & recovery
 
@@ -236,7 +236,7 @@ The device keeps two firmware slots (A/B). An update stages the new image into t
 
 Firmware is delivered over **Cyphal** (the device pulls the image from a host file server with standard `uavcan.file.Read`, so `yakut --update-software` drives it unchanged) or over **I²C** (chunked, host-paced). The same pull engine also delivers a **driver image** on demand. A device whose application firmware is damaged beyond the revert path recovers through the bootloader's serial-recovery window (a standard MCUboot/SMP path) — the last-resort escape hatch, armed remotely over any transport (`nxs recover`, or the `ENTER_RECOVERY` command) so no physical access is needed to reach it.
 
-Each product release publishes the signed application image together with the host tool (wheel and container image) and SHA-256 digests — the verified inputs to a field update. Normative: the [Interface Description](firmware/nxs-host-interface.md) (update procedures) and the [Integration & Operation Manual](firmware/nxs-integration-manual.md) (workflows).
+Each product release publishes the signed application image together with the host tool (wheel and container image) and SHA-256 digests — the verified inputs to a field update. Normative: the [Interface Description](../reference/) (update procedures) and the [Integration & Operation Manual](../reference/) (workflows).
 
 ### 4.7 Liveness & telemetry
 
@@ -259,7 +259,7 @@ The identify strobe turns a manifest entry into a physical board: strobe one uni
 
 A single cross-transport host tool, **`nxs`**, drives every operation over I²C, Cyphal/serial, or Cyphal/CAN (`-t {i2c,cyphal-serial,cyphal-can}`): probe, upload/compile a driver, run/stop, read parameters and outputs, stream decoded samples, manage the driver store, set decimation, **commission node-ID and subject-IDs** (with the CAN bit-timing profile and termination), calibrate a unit and set its mounting orientation (`nxs calibrate`), run the ROS 2 bridge (`nxs ros2`), and push firmware. The same operations are available as a transport-independent Python SDK (`NxsClient`) that the tool is built on, so host code runs unchanged across transports. Stock OpenCyphal tools (`yakut`, `yukon`) work alongside it, since the device is a standards-compliant Cyphal node.
 
-For multi-unit hosts the same tool scales to a declarative **suite workflow**: `nxs suite scan --init` transcribes every connected unit — GMSL/I²C tunnels, CAN segments, serial links — into a `suite.yaml` manifest (named units, link addresses, firmware pins, per-unit sensor panels with parameters), and `nxs suite apply` idempotently converges reality to it: probe, serial-number guard (a swapped board on a link is flagged, never silently reconfigured), firmware pinning (up **or** down, from a local image store), node-ID commissioning, driver deploy and re-tune. `nxs suite status` and `nxs suite scan --diff` report per-unit drift; `nxs suite freeze` adopts live tuning back into the manifest. A declared unit is addressed by name in any command (`nxs --unit imu-mast set accel_fs 16`), the manifest supplying the transport. Normative: suite provisioning in the [Integration & Operation Manual](firmware/nxs-integration-manual.md).
+For multi-unit hosts the same tool scales to a declarative **suite workflow**: `nxs suite scan --init` transcribes every connected unit — GMSL/I²C tunnels, CAN segments, serial links — into a `suite.yaml` manifest (named units, link addresses, firmware pins, per-unit sensor panels with parameters), and `nxs suite apply` idempotently converges reality to it: probe, serial-number guard (a swapped board on a link is flagged, never silently reconfigured), firmware pinning (up **or** down, from a local image store), node-ID commissioning, driver deploy and re-tune. `nxs suite status` and `nxs suite scan --diff` report per-unit drift; `nxs suite freeze` adopts live tuning back into the manifest. A declared unit is addressed by name in any command (`nxs --unit imu-mast set accel_fs 16`), the manifest supplying the transport. Normative: suite provisioning in the [Integration & Operation Manual](../reference/).
 
 <div style="page-break-after: always;"></div>
 

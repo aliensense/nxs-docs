@@ -126,7 +126,7 @@ Over the same host transports, via the `nxs` tool — including a recovery path 
 
 ### Is any of the software open source?
 
-NXS includes open-source components, provided as-is under their respective licenses — see our [Third Party Licenses](/legal/third-party-licenses). The NXS application software is licensed under our [Software License Agreement](/legal/software-license).
+NXS includes open-source components, provided as-is under their respective licenses — the third-party license texts ship with each release bundle. The NXS application software is licensed under the software license agreement included with the product.
 
 ### What if mikroBUS isn't enough — can I connect my own hardware?
 

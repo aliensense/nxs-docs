@@ -6,12 +6,10 @@ hero:
   tagline: Plug in a sensor, upload a driver, read SI units on the wire
   actions:
     - text: Get started
-      link: getting-started/overview/
-    - text: Hardware
-      link: hardware/product-description/
+      link: getting-started/install/
 ---
 
-import { Aside, Card, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import { Aside, CardGrid, LinkCard, Steps } from '@astrojs/starlight/components';
 
 ## What NXS is
 
@@ -22,13 +20,32 @@ uploaded at runtime — no firmware rebuild per sensor — and every output
 field is self-described, so a host decodes any sensor without
 sensor-specific code.
 
+## Typical workflow
+
+<Steps>
+1. Install the `nxs` host tool — one wheel covers every transport.
+2. Wire the unit and confirm it answers: `nxs probe`.
+3. Upload a driver for your sensor: `nxs upload iam20680 --param sample_rate=250`.
+4. Stream decoded SI samples: `nxs stream` — or consume them over Cyphal or the ROS 2 bridge.
+5. Save the driver to a store slot; the unit auto-binds it on every boot.
+</Steps>
+
+## Find your page
+
 <CardGrid>
-	<LinkCard title="Getting Started" href="getting-started/overview/">
-		Install the host tool, probe the device, stream your first samples.
+	<LinkCard title="Install and first contact" href="getting-started/install/">
+		Wheel install with uv or pip, then probe, upload, and stream in
+		three commands.
 	</LinkCard>
-	<LinkCard title="Hardware" href="hardware/product-description/">
-		The NXS assembly: compute board, GMSL serializer, connectors,
-		ratings, mechanical.
+	<LinkCard title="Product description" href="hardware/product-description/">
+		What the NXS assembly is: compute board, GMSL serializer, and how
+		they connect to camera and host.
+	</LinkCard>
+	<LinkCard title="Datasheet" href="hardware/datasheet/">
+		Connectors, pinout, electrical ratings, and mechanical drawings.
+	</LinkCard>
+	<LinkCard title="Specifications and FAQ" href="hardware/specifications/">
+		The numbers at a glance, and the questions integrators ask first.
 	</LinkCard>
 </CardGrid>
 
