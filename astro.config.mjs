@@ -24,7 +24,6 @@ export default defineConfig({
 			sidebar: [
 				{ label: 'Getting Started', autogenerate: { directory: 'getting-started' } },
 				{ label: 'Hardware', autogenerate: { directory: 'hardware' } },
-				{ label: 'Reference', autogenerate: { directory: 'reference' } },
 			],
 			customCss: ['/src/styles/custom.css'],
 			head: [

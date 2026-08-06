@@ -24,6 +24,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # The reference section is not part of the published site; remove
+      # this step and restore the sidebar group to include it.
+      - name: Exclude the reference section
+        run: rm -rf src/content/docs/reference
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
