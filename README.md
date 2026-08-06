@@ -1,7 +1,16 @@
-# RedBrain Docs
+# NXS Docs
 
-Public documentation for the RedBrain robotics computing platform.
+Documentation site for the Aliensense NXS sensor co-processor.
 Built with [Astro Starlight](https://starlight.astro.build/).
+
+## Layout
+
+- `src/content/docs/` — the site content: landing page, getting-started,
+  and hardware pages are authored in this repository.
+- `src/content/docs/reference/` — **machine-managed**: the released
+  specification set, mirrored from the firmware repository on every
+  release. Do not edit these files here; fixes go to the firmware
+  repository's `docs/specs/` and arrive with the next release.
 
 ## Windows setup and usage (beginner-friendly)
 
@@ -43,7 +52,7 @@ You can edit files in any editor, but VS Code is easiest for Markdown docs.
 
 ## 2) Open the project folder on Windows
 
-If you already have the `redbrain-docs` folder, continue.
+If you already have the `nxs-docs` folder, continue.
 
 If not, either:
 
@@ -53,7 +62,7 @@ If not, either:
 Then open a terminal in that folder:
 
 1. Open File Explorer.
-2. Open the `redbrain-docs` folder.
+2. Open the `nxs-docs` folder.
 3. Click the address bar at the top.
 4. Type `cmd` and press Enter.
 
