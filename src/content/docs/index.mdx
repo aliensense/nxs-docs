@@ -9,7 +9,7 @@ hero:
       link: getting-started/install/
 ---
 
-import { Aside, CardGrid, LinkCard, Steps } from '@astrojs/starlight/components';
+import { CardGrid, LinkCard, Steps } from '@astrojs/starlight/components';
 
 ## What NXS is
 
@@ -18,7 +18,9 @@ bytecode on an on-device virtual machine and serves SI-unit samples to a
 host over I²C, UART (Cyphal/serial), or CAN-FD (Cyphal/CAN). Drivers are
 uploaded at runtime — no firmware rebuild per sensor — and every output
 field is self-described, so a host decodes any sensor without
-sensor-specific code.
+sensor-specific code. Any mikroBUS-attachable sensor with a datasheet is
+a driver candidate: the SDK's driver-generation skill reads the
+datasheet and produces a validated driver.
 
 ## Typical workflow
 
@@ -29,8 +31,6 @@ sensor-specific code.
 4. Stream decoded SI samples: `nxs stream` — or consume them over Cyphal or the ROS 2 bridge.
 5. Save the driver to a store slot; the unit auto-binds it on every boot.
 </Steps>
-
-## Find your page
 
 <CardGrid>
 	<LinkCard title="Install and first contact" href="getting-started/install/">
@@ -48,10 +48,3 @@ sensor-specific code.
 		The numbers at a glance, and the questions integrators ask first.
 	</LinkCard>
 </CardGrid>
-
-<Aside type="note" title="Driver generation">
-	Any mikroBUS-attachable sensor with a datasheet is a driver candidate:
-	the SDK ships an AI driver-generation skill that reads the datasheet and
-	produces a validated driver. The driver development guide ships with
-	the SDK release bundle.
-</Aside>
