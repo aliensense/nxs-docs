@@ -1,8 +1,16 @@
 name: Docs CI/CD
 
+# The public site is a pure function of two branches: main builds to the
+# site root, and — while a staging branch exists — staging builds under
+# /staging/. The redbrain release-export workflow pushes rc releases to
+# staging and full releases to main (deleting staging), so:
+#   rc release published   -> /staging/ updates, root untouched
+#   full release published -> root updates, /staging/ disappears
+# Pull requests build only (downloadable dist artifact), never deploy.
+
 on:
   push:
-    branches: [main]
+    branches: [main, staging]
   pull_request:
     branches: [main]
   workflow_dispatch:
@@ -14,50 +22,99 @@ permissions:
   pull-requests: write
 
 concurrency:
-  group: docs-${{ github.workflow }}-${{ github.ref }}
+  group: docs-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.ref || 'deploy' }}
   cancel-in-progress: true
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout main
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'pull_request' && github.ref || 'main' }}
+          path: site-main
 
-      # The reference section is not part of the published site; remove
-      # this step and restore the sidebar group to include it.
-      - name: Exclude the reference section
-        run: find src/content/docs/reference -name '*.md' ! -name 'index.md' -delete
+      # Hide the reference section while it carries a hand-run pre-release
+      # seed; release-labeled content (mirrored at a published tag) passes
+      # through untouched.
+      - name: Gate an unreleased reference seed (main)
+        working-directory: site-main
+        run: |
+          if grep -lq "at pre-release" src/content/docs/reference/nxs-*.md 2>/dev/null; then
+            find src/content/docs/reference -name '*.md' ! -name 'index.md' -delete
+            echo "reference seed is pre-release - hidden from the site root"
+          fi
 
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: npm
+          cache-dependency-path: site-main/package-lock.json
+
+      - name: Build the root site
+        id: build
+        working-directory: site-main
+        run: |
+          npm ci
+          npm run build
+
+      - name: Check for a staging branch
+        if: github.event_name != 'pull_request'
+        id: staging
+        run: |
+          if git ls-remote --exit-code --heads \
+              "https://x-access-token:${{ github.token }}@github.com/${GITHUB_REPOSITORY}" \
+              staging > /dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Checkout staging
+        if: steps.staging.outputs.exists == 'true'
+        uses: actions/checkout@v4
+        with:
+          ref: staging
+          path: site-staging
+
+      - name: Gate an unreleased reference seed (staging)
+        if: steps.staging.outputs.exists == 'true'
+        working-directory: site-staging
+        run: |
+          if grep -lq "at pre-release" src/content/docs/reference/nxs-*.md 2>/dev/null; then
+            find src/content/docs/reference -name '*.md' ! -name 'index.md' -delete
+            echo "reference seed is pre-release - hidden from staging"
+          fi
+
+      - name: Build the staging site under /staging/
+        if: steps.staging.outputs.exists == 'true'
+        working-directory: site-staging
+        env:
+          DOCS_BASE: /${{ github.event.repository.name }}/staging
+        run: |
+          npm ci
+          npm run build
+          mkdir -p ../site-main/dist/staging
+          cp -R dist/. ../site-main/dist/staging/
 
       - name: Setup Pages
-        if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
+        if: github.event_name != 'pull_request'
         uses: actions/configure-pages@v5
 
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build docs
-        id: build
-        run: npm run build
-
       - name: Upload Pages artifact
-        if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
+        if: github.event_name != 'pull_request'
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./dist
+          path: site-main/dist
 
       - name: Upload PR preview artifact
         if: github.event_name == 'pull_request' && steps.build.outcome == 'success'
         uses: actions/upload-artifact@v4
         with:
           name: pr-preview-dist
-          path: ./dist
+          path: site-main/dist
           if-no-files-found: error
 
       - name: Comment PR build status
@@ -95,7 +152,7 @@ jobs:
             }
 
   deploy:
-    if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
+    if: github.event_name != 'pull_request'
     needs: build
     runs-on: ubuntu-latest
     environment:
