@@ -1,8 +1,8 @@
 ---
 title: "NXS — Integration & Operation Manual"
 sidebar:
-  order: 4
-# Mirrored from the firmware repository (docs/specs/nxs-integration-manual.md) at v1.0.0-rc1.
+  order: 5
+# Mirrored from the firmware repository (docs/specs/nxs-integration-manual.md) at pre-release v1.0.0-rc1-193-g3e0ac604d (3e0ac604d).
 # Do not edit here — changes flow through the next release.
 ---
 
@@ -10,23 +10,25 @@ Applies to: NXS v1.0 · product version 1.0.x · `nxs` tool 1.0.x
 
 | Document set | |
 |---|---|
-| [Datasheet](nxs-datasheet.md) | electrical, pinout, performance, supported sensors |
-| [Interface Description](nxs-host-interface.md) | transports, register map, commands, procedures |
+| [Device Reference](../nxs-device-reference/) | interfaces, performance and limits, supported sensors, versioning |
+| [Interface Description](../nxs-host-interface/) | transports, register map, commands, procedures |
 | **Integration & Operation Manual** (this document) | design-in, host setup, workflows |
-| [Driver Development Guide](nxs-driver-development.md) | authoring drivers for unsupported sensors |
+| [Driver Development Guide](../nxs-driver-development/) | authoring drivers for unsupported sensors |
+| [FAQ](../nxs-faq/) | frequently asked questions |
+| [Technical Specifications](../nxs-specifications/) | capability summary tables |
 
 ## 1. Quick start
 
 Evaluation path: one NXS module, one sensor on the mikroBUS socket, a USB-UART adapter on the host serial port (460800 8N1).
 
-Install the host tool (isolated, no system Python changes). Install `uv` per its documentation (<https://docs.astral.sh/uv/getting-started/installation/>) or from your OS package manager, then:
+Install the host tool (isolated, no system Python changes). Install `uv` per [its documentation](https://docs.astral.sh/uv/getting-started/installation/) or from your OS package manager, then:
 
 ```sh
 uv tool install "./nxs-<version>-py3-none-any.whl[cyphal]"
 eval "$(nxs env)"
 ```
 
-The wheel comes from the release bundle; `nxs env` exports the Cyphal environment (DSDL path, host node-ID 127).
+The wheel comes from the release bundle. `nxs env` exports the Cyphal environment (DSDL path, host node-ID 127) and installs tab completion for every `nxs` verb, flag, and argument choice on bash and zsh.
 
 Talk to the module:
 
@@ -78,7 +80,7 @@ The same commands run over I²C (`--transport i2c --bus /dev/i2c-2`) and CAN-FD 
 - Sensor reset (mikroBUS RST) is driven by the loaded driver with per-driver polarity. Leave it unconnected for sensors without reset and never strap it to a fixed level. Do not tie RST to CS on the carrier either, because the bootloader reads that pair as a recovery request at every reset (§4.5).
 - CAN-FD requires an external transceiver on the carrier rated for the 4 Mbps data phase. Termination per CAN practice (120 Ω at both bus ends): v2 modules carry an on-board split termination that is **off by default** — commission `can-term on` (§4.3) on the two bus-end modules, or terminate externally. v1.0 modules always need external termination.
 - The host UART carries the host link in normal operation, and the update protocol during firmware update and recovery. Reserve it for that and do not share it with other carrier functions. Console and log output does not share the port, in the bootloader as much as in the application.
-- Pinout, electrical limits, and the pull-up requirement above 400 kHz on the sensor I²C bus: [Datasheet §3](nxs-datasheet.md).
+- The socket contract — pin functions, the one-active-driver rule, and the pull-up requirement above 400 kHz on the sensor I²C bus: [Device Reference §2.2](../nxs-device-reference/). Pinout and electrical limits: the NXS product datasheet.
 
 ### 2.2 Transport choice
 
@@ -88,7 +90,7 @@ The same commands run over I²C (`--transport i2c --bus /dev/i2c-2`) and CAN-FD 
 | Cyphal/serial (UART 460800) | Point-to-point host link, evaluation, Linux hosts | yes — registers, services, subjects, DFU |
 | Cyphal/CAN-FD | Vehicle bus, multiple nodes, longer runs | yes — registers, services, subjects, DFU |
 
-All three expose the same driver, parameter, store, and update procedures; the [Interface Description](nxs-host-interface.md) defines each surface normatively.
+All three expose the same driver, parameter, store, and update procedures; the [Interface Description](../nxs-host-interface/) defines each surface normatively.
 
 ## 3. Host platform setup
 
@@ -117,21 +119,23 @@ The default module profile is CAN FD 1 Mbps arbitration / 4 Mbps data:
 
 ```sh
 sudo ip link set can0 up type can \
-    bitrate 1000000 sample-point 0.875 \
-    dbitrate 4000000 dsample-point 0.75 fd on
+    bitrate 1000000 sample-point 0.875 sjw 4 \
+    dbitrate 4000000 dsample-point 0.75 dsjw 4 fd on
 ip -details link show can0
 ```
 
-The second command verifies FD mode, both bitrates, and the sample points.
+The second command verifies FD mode, both bitrates, the sample points, and both jump widths.
 
 For a module commissioned onto a Classic profile, bring the interface up without FD at the module's nominal rate (here 1 Mbps), and drive nxs with `--mtu 8`:
 
 ```sh
-sudo ip link set can0 up type can bitrate 1000000 sample-point 0.875 fd off
+sudo ip link set can0 up type can bitrate 1000000 sample-point 0.875 sjw 4 fd off
 nxs -t cyphal-can -p can0 --mtu 8 probe
 ```
 
-`nxs can-bitrate` reads the module's persisted profile (Interface Description §8.2.7). The explicit `fd off` matters: Linux keeps CAN control-mode flags across reconfigurations, so an interface previously brought up with `fd on` stays in FD mode unless the flag is named. The host interface must match the module's *active* profile exactly — bitrates and sample points (0.875 / 0.750); a mismatch shows as error frames under load, and FD and Classic nodes cannot share a segment. Classic profiles carry control, telemetry, and decimated streams; full-rate raw capture needs an FD profile (Datasheet §7).
+Name the jump widths explicitly as well. Linux defaults both the nominal `sjw` and the data-phase `dsjw` to 1 time quantum, too little margin at these bit timings for a receiver to track another node's clock. The symptom is one-directional, in that the interface receives normally while its own transmissions go unacknowledged and the controller sits at `ERROR-PASSIVE`. A value of 4 is sufficient for `sjw` on both profiles and for `dsjw` on an FD profile; a Classic profile has no data phase and takes `sjw` alone. An FD interface left at the default `dsjw` fails this way even with `sjw` set, and only while carrying bit-rate-switched frames — Classic traffic on the same interface passes.
+
+`nxs can-bitrate` reads the module's persisted profile (Interface Description §8.2.7). The explicit `fd off` matters: Linux keeps CAN control-mode flags across reconfigurations, so an interface previously brought up with `fd on` stays in FD mode unless the flag is named. The host interface must match the module's *active* profile exactly — bitrates and sample points (0.875 / 0.750); a mismatch shows as error frames under load, and FD and Classic nodes cannot share a segment. Classic profiles carry control, telemetry, and decimated streams; full-rate raw capture needs an FD profile (Device Reference §3).
 
 ### 3.4 Stock Cyphal tooling
 
@@ -247,7 +251,7 @@ $NXS commission --subject acceleration=6246
 $NXS commission --save
 ```
 
-`--node-id 65535` (the `0xFFFF` sentinel) reverts to the compiled default. Full semantics: [Interface Description §6.7](nxs-host-interface.md).
+`--node-id 65535` (the `0xFFFF` sentinel) reverts to the compiled default. Full semantics: [Interface Description §6.7](../nxs-host-interface/).
 
 The CAN bit timing is commissioned the same way — verify the new profile on a bench link before deploying, and reconfigure the host interface (§3.3) after the reboot that applies it. A read with no value prints the active profile (`1000000/4000000 (fd)` on a factory-fresh module); a bare rate stages Classic CAN at that rate; `0` stages a revert to the default FD profile; the save persists the staged profile, which applies at the next reboot:
 
@@ -257,7 +261,7 @@ $NXS can-bitrate 1000000
 $NXS commission --save
 ```
 
-`commission --can-bitrate 1000000/4000000` stages the pair inside a commissioning run. Supported profiles: Datasheet §7. A node whose profile does not match its bus is unreachable over CAN but stays reachable over the serial link and I²C — rewrite the profile there.
+`commission --can-bitrate 1000000/4000000` stages the pair inside a commissioning run. Supported profiles: Device Reference §3. A node whose profile does not match its bus is unreachable over CAN but stays reachable over the serial link and I²C — rewrite the profile there.
 
 The on-board split termination is part of the same commissioning session. It applies **live** (no reboot) and is off by default — turn it on only at the two modules sitting at the physical bus ends. The read prints `off` on a factory-fresh module, the toggle applies immediately, and the save persists it; an unsaved change reverts at the next power-cycle:
 
@@ -271,7 +275,7 @@ $NXS commission --save
 
 ### 4.4 Persistence model
 
-Running configuration and startup configuration are distinct. `store save <slot>` persists the driver; `commission --save` persists identity, subjects, decimation, the CAN bit timing, and the termination selection. Anything not saved reverts at power-cycle.
+Running configuration and startup configuration are distinct. `store save <slot>` persists the driver; `commission --save` persists identity, subjects, decimation, the running calibration record, the CAN bit timing, and the termination selection (the calibration verbs of §4.9 persist by default). Anything not saved reverts at power-cycle.
 
 ```sh
 $NXS store save 0
@@ -322,7 +326,7 @@ Every upload prints one warning before it starts, and it is expected on every un
 WARNING  Error reading MCUMgr parameters: ... rc=<MGMT_ERR.ENOTSUP: 8>
 ```
 
-The bootloader implements the subset of SMP that recovery needs, and the optional parameters query is not part of it, so the module answers "not supported" and the client falls back to a conservative frame size. `--line-buffers 8` supplies the value that query would have returned. Without it the upload still succeeds, roughly a third slower. Full procedure: [Interface Description §7.4](nxs-host-interface.md).
+The bootloader implements the subset of SMP that recovery needs, and the optional parameters query is not part of it, so the module answers "not supported" and the client falls back to a conservative frame size. `--line-buffers 8` supplies the value that query would have returned. Without it the upload still succeeds, roughly a third slower. Full procedure: [Interface Description §7.4](../nxs-host-interface/).
 
 Three entrances reach that state. Each one covers a failure the entrance above it cannot.
 
@@ -338,18 +342,18 @@ Throughout recovery the status LED shows two dark winks per second (§4.7).
 
 1. Remove the sensor board from the mikroBUS socket.
 2. Fit the shuttle adapter.
-3. Bridge `RST` to `CS` with a jumper wire. They are the second and third pins from the AN end of the AN-side header, per [Datasheet §3.1](nxs-datasheet.md).
+3. Bridge `RST` to `CS` with a jumper wire. They are the second and third pins from the AN end of the AN-side header, per [Device Reference §2.2](../nxs-device-reference/).
 4. Power-cycle or reset the module.
 
 The LED confirms the state. Upload as above, then remove the jumper. A module reset with the jumper still fitted re-enters recovery.
 
 A seated sensor board never triggers this. The test requires both pins to follow a driven level through a high phase and a low phase, which only a wire does.
 
-Version compatibility promises (what MAJOR/MINOR/PATCH mean for your integration): [Datasheet §9](nxs-datasheet.md).
+Version compatibility promises (what MAJOR/MINOR/PATCH mean for your integration): [Device Reference §5](../nxs-device-reference/).
 
 ### 4.6 Reading samples over I²C registers
 
-An MCU host without Cyphal reads the same data through the register map: descriptor window once at integration time, then one latched read of the sample record per sample — acquisition timestamp, sequence number, and data in a single coherent snapshot — decoding `raw × scale + offset` per field. The record's latch-time field also gives the host a device-clock sync observation per poll. Registers, the record layout, and the sync method: [Interface Description §3–§6](nxs-host-interface.md).
+An MCU host without Cyphal reads the same data through the register map: descriptor window once at integration time, then one latched read of the sample record per sample — acquisition timestamp, sequence number, and data in a single coherent snapshot — decoding `raw × scale + offset` per field. The record's latch-time field also gives the host a device-clock sync observation per poll. Registers, the record layout, and the sync method: [Interface Description §3–§6](../nxs-host-interface/).
 
 ### 4.7 The status LED, and locating a unit
 
@@ -359,7 +363,7 @@ The green status LED renders the module's state as a moving pattern. Two familie
 
 **The bootloader** inverts that. It holds the LED lit and notches it with dark winks. One wink per second is the image check, two is serial recovery awaiting an upload (§4.5), and three is an update applying, during which power must stay on. A module with no valid image departs from the family with a single slow 300 ms pulse per second, mostly dark, like the failure it reports.
 
-Every state in both families moves. A static LED, dark or solid, therefore always means the module is not executing. Exact frame timings are in the pattern table at [Datasheet §3.2](nxs-datasheet.md).
+Every state in both families moves. A static LED, dark or solid, therefore always means the module is not executing. Exact frame timings are in the pattern table at [Device Reference §2.3](../nxs-device-reference/).
 
 To pick one unit out of several identical modules:
 
@@ -368,6 +372,81 @@ $NXS identify
 ```
 
 Works over I²C and the Cyphal transports; on a suite-managed host, `nxs --unit <name> identify` addresses the unit by its manifest role.
+
+### 4.8 Reading device logs
+
+The module forwards its own log lines over Cyphal, so a fielded unit is debuggable without any debug-probe access. Lines at or above a severity floor (warnings, by default) arrive as `uavcan.diagnostic.Record` on fixed subject 8184, over serial and CAN alike:
+
+```sh
+yakut sub 8184:uavcan.diagnostic.record.1.1
+```
+
+Each record carries the device timestamp, the severity, and the log text. The floor is the `uavcan.diagnostic.severity` register: write `2` to stream informational lines during a session, and `4` to restore the default when done — values and semantics in the [Interface Description §8.2](../nxs-host-interface/). The stream is rate-bounded and sent below data priority, so subscribing never disturbs sample traffic.
+### 4.9 Calibration
+
+Per-unit calibration corrects the SI outputs. The raw stream stays raw counts, and a raw sample decoded with the served record reproduces the SI subjects exactly. Wire surface, record layout, and the on-device procedures: [Interface Description §6.9](../nxs-host-interface/). The calibration verbs persist by default. `--no-persist` leaves the result in the running state, reverting at power-cycle.
+
+Declare the mounting orientation at installation — one of the 24 axis-aligned rotation codes (`YAW_90`, `PITCH_180`, `ROLL_90_YAW_270`, …), naming the module's rotation relative to the vehicle body:
+
+```sh
+$NXS set-orientation YAW_90
+# orientation = YAW_90 (persisted)
+$NXS set-orientation                  # no argument: print the current code
+```
+
+Gyro bias — hold the vehicle still:
+
+```sh
+$NXS calibrate gyro
+# hold still — the device is measuring gyro bias
+# ━━━━━━━━━━ 100%
+# ✓ applied on-device + persisted
+```
+
+The same solve runs automatically at every boot. A still boot completes unaided. A moving boot gives up after ~15 s and leaves the stored bias untouched.
+
+Magnetometer — in-situ, mounted in the vehicle. The iron the fit removes belongs to the installation, so a bench calibration does not transfer. Rotate the vehicle through all attitudes:
+
+```sh
+$NXS calibrate mag
+# coverage ━━━━━━━━━─ 12/14
+# ✓ applied on-device + persisted
+```
+
+The verb auto-stops at sufficient coverage; a stop refused for coverage keeps the collection open, so the verb tells the operator to keep rotating and asks again. Any other refused fit — degenerate geometry, a failed self-check — reports its reason and changes nothing. The procedure also runs without the tool, from any Cyphal master:
+
+```sh
+yakut cmd 125 0xA00B                              # CAL_MAG_START
+yakut r 125 aliensense.nxs.calibration.progress
+yakut cmd 125 0xA00C                              # CAL_MAG_STOP: status 0 = solved + applied
+yakut cmd 125 0xA00D                              # CAL_ABORT: cancel, applying nothing
+```
+
+Accelerometer — a bench procedure of six still poses, each axis up and down, auto-captured on stillness. The affine solves host-side and is refused if any pose residual exceeds 5 % of g:
+
+```sh
+$NXS calibrate accel
+# ✓ +Z  (0.998 g)
+# ...                                 # six poses
+# solve: max residual 0.6% of g
+# ✓ applied on-device + persisted
+```
+
+Encoder zero — declare the current mechanical position as zero (circular mean of 50 samples):
+
+```sh
+$NXS calibrate encoder-zero
+```
+
+Inspect and reset:
+
+```sh
+$NXS calibrate show                   # orientation, per-bucket status + guard, encoder zero
+$NXS calibrate show --full            # + the M / b coefficients
+$NXS calibrate reset                  # identity + persist; orientation kept
+```
+
+Each solved bucket is guarded by the driver it was solved against. After a sensor swap the stale calibration goes inactive and only the mount rotation still applies. `calibrate show` names the mismatch, and `suite status` flags the unit's CAL column `STALE` (§5.9). Recalibrate after any sensor change.
 
 ## 5. Suite provisioning
 
@@ -400,6 +479,7 @@ units:
       - {transport: cyphal-can, iface: can1, node_id: 125}
     serial: "2f004b0032510f0011223344"
     firmware: "1.0.0"
+    orientation: YAW_90   # optional; declared mounting rotation (§4.9)
     sensors:
       - driver: iam20680
         config: {sample_rate: 250, accel_fs: 8}
@@ -414,7 +494,9 @@ units:
 
 Link forms are `{transport: i2c, bus, address}`, `{transport: cyphal-can, iface, node_id}`, and `{transport: cyphal-serial, port[, baud]}`. A top-level `defaults: {firmware: "..."}` sets a suite-wide pin that units may override. Unknown keys and malformed values are rejected with the YAML path named.
 
-A `driver:` name resolves against `/opt/aliensense/drivers/*.py` first, then the shipped set. An unknown name fails that unit and names the generation route, the Driver Development Guide's datasheet-in, driver-out flow.
+A unit-level `orientation:` (a rotation code name, §4.9) declares the mounting: `switch` converges the device to it, `freeze` adopts the device's current code into the manifest, and a mismatch reports as `orientation` drift (§5.9). Solved calibration coefficients never enter the manifest — they are per-unit device state, persisted on the device.
+
+A `driver:` name resolves against `/opt/aliensense/drivers/*.py` first, then the shipped set; an unknown name fails that unit and names the generation route (the Driver Development Guide's datasheet-in → driver-out flow).
 
 Units sharing one host bus behind a multi-link deserializer all answer the fixed register-map address `0x30`. The bus layer must present each at a distinct host-side address via the deserializer's I²C address translation — link B's `0x30` becomes `0x31`, the convention `scan` probes on every leaf bus. Mux parent adapters are excluded, since a trunk only duplicates a child's unit, and any address the manifest declares is swept too. The platform owns the translation, whether in devicetree, the camera stack, or a boot service, and it is programmed before first contact. Two un-aliased units answering one address return merged reads: probe succeeds while the serial belongs to neither board, and writes reach both units at once.
 
@@ -458,7 +540,7 @@ On a shared CAN trunk, factory-fresh units all boot at node-ID 125, so bring the
 
 ### 5.4 Firmware pinning
 
-`firmware: "X.Y[.Z]"` pins a unit to a version held in `/opt/aliensense/firmware/`. The pin matches the version in each image's MCUboot header — filenames are irrelevant. Switch flashes on any provable mismatch, up **or down**. Rollback is editing the pin and re-applying.
+`firmware: "X.Y[.Z]"` pins a unit to a version held in `/opt/aliensense/firmware/`. The pin matches the version in each image's MCUboot header — filenames are irrelevant. Switch flashes on any provable mismatch, up **or down**: a release build identity proves its full version and decides alone, while a device serving a prerelease or untagged identity proves no version and converges through the tool's own flash records. Rollback is editing the pin and re-applying.
 
 ```sh
 cp nxs-v1.0.signed.bin /opt/aliensense/firmware/
@@ -467,7 +549,7 @@ nxs suite switch
 
 A unit whose running version differs from the pin is flashed — up or down.
 
-The device reports MAJOR.MINOR on every transport (`uavcan.node.GetInfo` over Cyphal, the `FW_VERSION` registers over I²C). A MAJOR.MINOR mismatch always flashes, and the state file refines convergence to the exact pin: a recorded patch different from the pin flashes, while a proven MAJOR.MINOR match with no record is left alone, so a correctly-pinned unit is not reflashed on its first switch. On firmware old enough to predate the `FW_VERSION` registers, I²C serves no version, so the first pinned switch flashes once and later applies trust the record.
+The device reports its full build identity on every transport (the `aliensense.nxs.fw.describe` register over Cyphal, the build-info transfer over I²C; Interface Description §6.10), with legacy firmware falling back to a bare MAJOR.MINOR. A MAJOR.MINOR mismatch always flashes, and the state file refines convergence to the exact pin: a recorded patch different from the pin flashes, while a proven MAJOR.MINOR match with no record is left alone, so a correctly-pinned unit is not reflashed on its first switch. On firmware old enough to predate the `FW_VERSION` registers, I²C serves no version, so the first pinned switch flashes once and later applies trust the record.
 
 ### 5.5 Tune, then freeze
 
@@ -583,7 +665,7 @@ sudo systemctl daemon-reload
 sudo systemctl enable --now nxs-timesync
 ```
 
-`suite status` reports each unit's discipline in the SYNC column: `±<bound>µs` while fresh, `-` when never synced or stale. The full mechanism — surfaces, record layout, semantics — is [Interface Description §6.8](nxs-host-interface.md).
+`suite status` reports each unit's discipline in the SYNC column: `±<bound>µs` while fresh, `-` when never synced or stale. The full mechanism — surfaces, record layout, semantics — is [Interface Description §6.8](../nxs-host-interface/).
 
 ### 5.9 Drift and health
 
@@ -592,9 +674,9 @@ nxs suite status
 ```
 
 ```
-UNIT      LINK                 STATE  DRIVER    VM       FW   SERIAL  DRIFT   SAMPLES
-imu-mast  i2c /dev/i2c-9@0x30  up     Iam20680  running  -    ok      config  12842
-fl-knee   can can0 node 10     up     Iam20680  running  1.1  ok      -       51203
+UNIT      LINK                 STATE  DRIVER    VM       FW   SERIAL  DRIFT   SYNC  CAL  SAMPLES
+imu-mast  i2c /dev/i2c-9@0x30  up     Iam20680  running  -    ok      config  -     ok   12842
+fl-knee   can can0 node 10     up     Iam20680  running  1.1  ok      -       -     -    51203
 ```
 
 ```sh
@@ -603,7 +685,7 @@ nxs suite scan --diff
 
 The diff compares reality against the manifest: silent units, undeclared devices, serial mismatches.
 
-Both are read-only. DRIFT names what differs from the manifest — `config` (parameters, resolved with `switch` or `freeze`), `driver`, `shape` (the stored panel), `fw` — and `-` means the unit matches.
+Both are read-only. DRIFT names what differs from the manifest — `config` (parameters, resolved with `switch` or `freeze`), `driver`, `shape` (the stored panel), `fw`, `orientation` (§5.1) — and `-` means the unit matches. CAL is the calibration guard verdict (§4.9): `ok` — solved and active for the running driver; `STALE` — solved against a different driver, recalibrate; `-` — nothing solved.
 
 ### 5.10 Serving compiled drivers over Cyphal
 
@@ -614,7 +696,7 @@ nxs upload iam20680 -o ./drivers/iam20680.nxs
 yakut file-server ./drivers &
 ```
 
-`-o` produces the artifact with no device attached; the file server serves the directory. Per node, command a `LOAD_FROM_FILE` with the artifact name ([Interface Description §6.1](nxs-host-interface.md)).
+`-o` produces the artifact with no device attached; the file server serves the directory. Per node, command a `LOAD_FROM_FILE` with the artifact name ([Interface Description §6.1](../nxs-host-interface/)).
 
 Provisioning artifacts are build products with a paired-format lifetime: regenerate the directory with the matching `nxs` tool after a firmware MINOR update — the tool refuses a stale artifact with its rebuild command.
 
@@ -674,7 +756,7 @@ The auto-map, by descriptor semantic:
 
 Conventions:
 
-- **Timestamps.** By default (`--stamp synced`) `header.stamp` is the sample's acquisition time projected into host time via the device's two-way sync surface (Interface Description §6.8) — the launch banner prints each unit's measured bound (~0.1 ms I²C, ~0.3–0.5 ms CAN, ~1–2 ms serial). `--stamp device` publishes the raw device clock (µs since boot — not host time); `--stamp arrival` stamps on receipt. Before the first sync observation the bridge stamps on arrival and warns once.
+- **Timestamps.** By default (`--stamp synced`) `header.stamp` is the sample's acquisition time projected into host time via the device's two-way sync surface (Interface Description §6.8) — the launch banner prints each unit's measured bound (~0.1 ms I²C, ~0.3–0.5 ms CAN, ~1–2 ms serial). `--stamp device` publishes the raw device clock (µs since boot — not host time); `--stamp arrival` stamps on receipt. Before the first sync observation the bridge stamps on arrival and warns once. `--stamp itow` builds `header.stamp` from a GNSS unit's own solution epoch — its time-of-week field resolved to UTC against the host clock — on units whose descriptors carry the GNSS epoch semantics (Interface Description §6.6); `nxs ros2 --plan` marks those units epoch-capable. A message without a time-solved fix falls back to the synced projection with one warning. This mode requires an NTP- or PTP-disciplined host clock: the host resolves the GPS week, every non-GNSS topic still carries host-projected stamps, and a fallback transition steps `header.stamp` by the host-to-GNSS clock offset.
 - **QoS.** Sensor-data profile (best-effort). Subscribe with matching QoS; `ros2 topic echo` adapts automatically.
 - **GNSS validity.** No `NavSatFix` publishes until latitude, longitude, and altitude are all present; a fix-type below fix threshold publishes `status: -1` (NO_FIX) with NaN position — never zeros — and suppresses `vel`. Covariance is the accuracy fields squared (`COVARIANCE_TYPE_DIAGONAL_KNOWN`); altitude is MSL, with any ellipsoidal height on its own `<field>` topic.
 - **Frames.** Vectors are in the sensor's own frame; mounting rotation is the consumer's static TF (`viz:=true` seeds a nominal per-unit transform for the bench). `frame_id` is the sanitized unit name (suite/`--unit`) or driver name (ad-hoc); `--frame-id` overrides it for a single device.
@@ -687,14 +769,17 @@ Conventions:
 |---|---|---|
 | `probe` times out (serial) | wrong port or baud | port from §3.1; the link is 460800 8N1 |
 | `probe` times out (CAN) | host timing ≠ the module's active profile, or wrong MTU | read the module's profile over serial/I²C (`can-bitrate`); bring the interface up per §3.3 with matching rates and `--mtu` |
+| any CAN verb fails naming `No buffer space available` | the interface is not getting frames onto the bus, its transmissions unacknowledged | `ip -details -statistics link show <iface>` confirms it as `ERROR-PASSIVE`: terminate the bus (§4.3) and set explicit `sjw` and `dsjw` (§3.3) |
 | CAN link unstable, error frames under load | bus not terminated — the module's termination is off by default | terminate both physical ends: `can-term on` at the end modules (§4.3) or external 120 Ω |
 | module absent from `i2cdetect` | wiring, wrong bus number | check §3.2; the module answers at `0x30` |
 | `image format X.Y, this tool builds ...` on upload | stale compiled artifact | run the printed command: `nxs upload <name>` |
-| `Uploaded, but the driver did not come up` | sensor missing / wrong bus wiring | check mikroBUS wiring and the sensor's address in [Datasheet §8](nxs-datasheet.md); the LED blinks fast while the probe fails |
+| `device speaks register-map vN; this nxs speaks vM only` | the `nxs` tool and the module firmware are different releases | install the matching `nxs` (§1), or bring the module to this tool's release with `push-fw` (§4.5). The tool refuses a mismatched contract before it can misread the device, but `probe`, `push-fw`, and `recover` stay available so a mismatched module can still be identified and updated in place |
+| `Uploaded, but the driver did not come up` | sensor missing / wrong bus wiring | check mikroBUS wiring and the sensor's address in [Device Reference §4](../nxs-device-reference/); the LED blinks fast while the probe fails |
 | status LED static (dark or solid) | module not executing | check power and reset; reflash via recovery (§4.5) — no firmware or bootloader state renders a static LED |
 | status LED mostly lit, dark winks | stalled in the bootloader | two winks: held in recovery, upload an image (§4.5); three winks: an update is applying, wait; one wink: the image check is not completing, reflash |
 | status LED single slow pulse per second | no valid firmware image | upload via recovery (§4.5) — the module holds in this state and needs no window |
 | driver refuses a parameter value | outside the allowed set | `caps` lists allowed values per parameter |
+| unexpected behavior on a deployed unit | device-side fault visible only in its logs | subscribe to the log stream (§4.9): `yakut sub 8184:uavcan.diagnostic.record.1.1`, and lower `uavcan.diagnostic.severity` for more detail |
 | node absent from `yakut monitor` | environment not loaded | `eval "$(nxs env)"` in this shell |
 | yakut errors after installing nxs (`ruamel.yaml` conflict) | both tools pip-installed into one site — yakut pins `ruamel.yaml<0.18`, nxs uses a newer one | install yakut isolated, per §3.4: `pipx install yakut` / `uv tool install yakut` |
 | repeated reboots after an update | new image failed self-confirm | the module rolled back automatically; re-push a good image |
@@ -705,4 +790,4 @@ Conventions:
 | `ros2: <unit>: serves no output descriptors` | no driver loaded and running on that unit | `suite switch`, or `upload` + `run` on the unit, then relaunch |
 | no SI subject traffic while `stream` works | subject decimated or ID 0 | `decimation --subject <name>`; `commission --show` |
 
-Error codes served by the device (`CMD_ERROR`, `ERROR_CODE`) are enumerated in [Interface Description §12](nxs-host-interface.md).
+Error codes served by the device (`CMD_ERROR`, `ERROR_CODE`) are enumerated in [Interface Description §12](../nxs-host-interface/).
