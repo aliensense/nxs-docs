@@ -11,6 +11,9 @@ Built with [Astro Starlight](https://starlight.astro.build/).
   specification set, mirrored from the firmware repository on every
   release. Do not edit these files here; fixes go to the firmware
   repository's `docs/specs/` and arrive with the next release.
+- `src/content/docs/hub/` — the NXS Hub pages, **placed manually** by
+  PR from the marketing sources; the mirror never touches them, and they
+  ride the per-release version snapshots with the rest of the site.
 - `versions.json` + `src/content/docs/<tag>/` + `src/content/versions/`
   — **machine-managed**: one frozen site version per published release,
   appended by the firmware repository's release-export workflow. The
