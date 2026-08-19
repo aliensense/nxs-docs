@@ -74,22 +74,3 @@ Eight validated sensor drivers ship out of the box. Beyond those, a driver is a 
 ## Who it's for
 
 NXS is relevant to any team that needs to place sensors or cameras away from the main compute unit — robotics, autonomous vehicles, industrial automation, research platforms. It removes the integration work between the sensor and the software stack, so the team focuses on what the sensor data is used for, not how to get it.
-
-<!-- 
-<details>
-<summary>Changelog</summary>
-
-| Version | Date | Changes |
-|---|---|---|
-| v0.1 | 2026-06-21 | Initial draft |
-| v0.2 | 2026-06-22 | Added no-reflashing benefit |
-| v0.3 | 2026-07-06 | Full rewrite: dual-mode GMSL2/3 + CAN-FD positioning; corrected ROS 2 host-bridge architecture; corrected driver claim; removed unvalidated latency/sync claims; updated to datasheet v0.5 specs; simplified language for non-engineering audience |
-| v0.4 | 2026-07-10 | MCU clock stated as the configured 160 MHz; driver claim reframed to the descriptive layer (AI-written from the datasheet, human-modifiable) with no catalog or count; added suite management (manifest, apply, drift) as a benefit and Software row |
-| v0.5 | 2026-07-14 | Filename de-spaced (`NXS_Product_Description.md`); `fleet` → `suite` throughout; driver layer editable by an engineer or an AI agent; "sensor-only runs" → "sensor-only networks"; dropped the `FDCAN` peripheral name from the MCU cell; Software table split on-board firmware vs host software with a Runs-on column; Cyphal/serial baud (460800 8N1) stated |
-| v0.6 | 2026-07-15 | Review round. First sentence tightened; sensor + camera stated as *and*, not *or*; the I²C register map (direct or GMSL-tunnelled) added to the host-side description; "no return" clarified to "no shipping the unit back"; one-cable benefit restated as one-GMSL-coax; added SI-units-on-the-wire, remote update / runtime reconfig, and ROS 2 benefit bullets. Eight validated drivers claimed out of the box; status-LED + `nxs identify` benefit bullet added; "+ 85 °C" spacing fixed |
-| v0.7 | 2026-07-15 | Lead on the strengths: self-described SI on the wire (no sensor-specific decode) and stock-OpenCyphal-tooling decode elevated to core benefits. ROS 2 stated as descriptor-driven auto-mapping onto standard topics (new sensor → right topic, no per-sensor wiring). Added per-unit inertial calibration + mounting-orientation alignment as a core benefit. Feature descriptions are capability-level (outcomes, not procedures) so implementation specifics stay open. No DroneCAN/autopilot claims |
-| v0.8 | 2026-07-23 | Supply floor corrected to 4.7 V (per the updated ratings); Timestamping row gains host-time translation via the bridge's synced stamps |
-| v0.9 | 2026-08-05 | GMSL naming policy: plain GMSL in prose; the Analog Devices term GMSL3/2 in spec/table rows and part-adjacent text (was GMSL2/3). |
-
-</details>
--->

@@ -109,7 +109,7 @@ The NXS compute board is the system control and carrier board. An **STM32G491CEU
 | 12 V input | 4.7 | 12.0 | 16 | — |
 | Operating temp (system) | −40 | — | +85 | Industrial grade |
 
-![Axon V2.3 PCB, top and bottom](img/axon-v2.3-pcb-top-bottom.jpg)
+![Axon V2.3 PCB, top and bottom](../../../assets/hardware/axon-v2.3-pcb-top-bottom.jpg)
 
 <div style="page-break-after: always;"></div>
 
@@ -144,7 +144,7 @@ The GMSL Serializer V2.3 is the remote, camera-side board. A **MAX96793** GMSL3/
 ### 3.5 Power-over-Coax (POC)
 The coax connector (X2) carries both the GMSL high-speed signal and the 12 V supply. This allows the remote board to be powered entirely over the single coax cable.
 
-![GMSL Serializer V2.3 PCB, top and bottom](img/gmsl-serializer-v2.3-pcb-top-bottom.jpg)
+![GMSL Serializer V2.3 PCB, top and bottom](../../../assets/hardware/gmsl-serializer-v2.3-pcb-top-bottom.jpg)
 
 <div style="page-break-after: always;"></div>
 
@@ -299,7 +299,7 @@ The physical I²C, FD-CAN, and host-UART signals above carry the logical host in
 | X5 | 3221-16-0300-00 | 16 | mikroBUS slot |
 | X6 | SM06B-SRSS-TB | 6+n | SWD + debug UART |
 
-![Axon V2.3 connector locations](img/axon-v2.3-connector-locations.jpg)
+![Axon V2.3 connector locations](../../../assets/hardware/axon-v2.3-connector-locations.jpg)
 
 <div style="page-break-after: always;"></div>
 
@@ -425,7 +425,7 @@ The physical I²C, FD-CAN, and host-UART signals above carry the logical host in
 | X2 | 2FA1-NZSP-PCBB6 | 2 | Coax GMSL3/2 output (FAKRA-type) + POC |
 | X3 | 0533980671 | 6+n | External 12 V + GPIO1/2 + GND |
 
-![GMSL Serializer V2.3 connector locations](img/gmsl-serializer-v2.3-connector-locations.jpg)
+![GMSL Serializer V2.3 connector locations](../../../assets/hardware/gmsl-serializer-v2.3-connector-locations.jpg)
 
 <div style="page-break-after: always;"></div>
 

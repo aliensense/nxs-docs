@@ -11,6 +11,20 @@ Built with [Astro Starlight](https://starlight.astro.build/).
   specification set, mirrored from the firmware repository on every
   release. Do not edit these files here; fixes go to the firmware
   repository's `docs/specs/` and arrive with the next release.
+- `versions.json` + `src/content/docs/<tag>/` + `src/content/versions/`
+  — **machine-managed**: one frozen site version per published release,
+  appended by the firmware repository's release-export workflow. The
+  version picker comes from the `starlight-versions` plugin.
+
+## Authoring rules
+
+- Images live under `src/assets/`, never inside `src/content/docs/` —
+  the version snapshotter parses every file in the content tree as
+  Markdown/MDX and dies on binary data.
+- No HTML comments (`<!-- -->`) and no `<https://…>` angle-bracket
+  autolinks in content — the snapshotter's parser is MDX-flavored and
+  rejects both. Use `[text](url)` links; use `≤` / `≥` in prose, not
+  `<=` / `>=`.
 
 ## Windows setup and usage (beginner-friendly)
 
@@ -208,7 +222,17 @@ npm run dev -- --force
 
 ## Deployment
 
-Pushes to `main` trigger GitHub Actions to build and deploy to GitHub Pages.
+The site is a pure function of two branches:
+
+- `main` builds to the site root.
+- `staging` (when it exists) builds under `/staging/` on the same site.
+
+The firmware repository's release-export workflow pushes **rc releases
+to `staging`** and **full releases to `main`** (deleting `staging`), so
+publishing an rc stages the future site at
+`https://aliensense.github.io/nxs-docs/staging/` and publishing the full
+release makes it live. Pull requests build only (downloadable
+`pr-preview-dist` artifact) and never deploy.
 
 ## Project structure
 

@@ -1,16 +1,27 @@
 // @ts-check
+import { readFileSync } from 'node:fs';
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
+import starlightVersions from 'starlight-versions';
 
 const repositoryName = process.env.GITHUB_REPOSITORY?.split('/')[1] ?? 'nxs-docs';
 const repositoryOwner = process.env.GITHUB_REPOSITORY_OWNER ?? 'aliensense';
 const isGitHubActions = process.env.GITHUB_ACTIONS === 'true';
 
+// One entry per published release, appended by the release-export workflow
+// (redbrain release-export.yml). A configured version whose directory is
+// missing under src/content/docs/ is snapshotted from the current docs at
+// the next build.
+const versions = JSON.parse(readFileSync(new URL('./versions.json', import.meta.url), 'utf8'));
+
 export default defineConfig({
 	site: `https://${repositoryOwner}.github.io`,
-	base: isGitHubActions ? `/${repositoryName}` : '/',
+	// DOCS_BASE overrides the base path for the staging half of the Pages
+	// artifact (deploy.yml builds the staging branch under /staging/).
+	base: process.env.DOCS_BASE ?? (isGitHubActions ? `/${repositoryName}` : '/'),
 	integrations: [
 		starlight({
+			plugins: versions.length > 0 ? [starlightVersions({ versions })] : [],
 			title: 'NXS Docs',
 			description: 'Documentation for the Aliensense NXS sensor co-processor.',
 			tagline: 'Any sensor, SI units on the wire',
