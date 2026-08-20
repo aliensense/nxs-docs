@@ -55,6 +55,7 @@ export default defineConfig({
 				{ tag: 'meta', attrs: { name: 'twitter:card', content: 'summary' } },
 			],
 			components: {
+				Head: './src/components/Head.astro',
 				Header: './src/components/Header.astro',
 				ThemeProvider: './src/components/ThemeProvider.astro',
 			},

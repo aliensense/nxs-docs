@@ -1,0 +1,29 @@
+---
+import Default from '@astrojs/starlight/components/Head.astro';
+---
+
+<Default><slot /></Default>
+
+<script>
+	// Render ```mermaid fences as diagrams. Expressive Code wraps each
+	// source line in its own div, so the source is rebuilt line-by-line;
+	// the mermaid chunk is only fetched on pages that carry a fence.
+	const fences = document.querySelectorAll('pre[data-language="mermaid"]');
+	if (fences.length > 0) {
+		const { default: mermaid } = await import('mermaid');
+		const dark = document.documentElement.dataset.theme !== 'light';
+		mermaid.initialize({ startOnLoad: false, theme: dark ? 'dark' : 'neutral' });
+		for (const pre of fences) {
+			const lines = pre.querySelectorAll('.ec-line');
+			const source =
+				lines.length > 0
+					? [...lines].map((line) => line.textContent ?? '').join('\n')
+					: (pre.textContent ?? '');
+			const holder = document.createElement('pre');
+			holder.className = 'mermaid';
+			holder.textContent = source;
+			(pre.closest('.expressive-code') ?? pre).replaceWith(holder);
+		}
+		await mermaid.run({ querySelector: '.mermaid' });
+	}
+</script>
