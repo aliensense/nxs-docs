@@ -2,12 +2,12 @@
 title: "Aliensense NXS"
 sidebar:
   order: 1
-# Copied from als-docs marketing/NXS (NXS_Product_Description.md) at 72b40d8; als-docs copy retires after the site review.
+# Copied from als-docs marketing/NXS (NXS_Brochure.md) at 33bbb5e; update by PR here.
 ---
 
-*v0.9 · 2026-08-05*
+*v0.10 · 2026-08-18*
 
-## What it is
+## Overview
 
 NXS is a compact PCB that connects MikroElektronika Click sensors (mikroBUS) and MIPI cameras to your robot over a single long-distance cable. It handles the hardware interface, driver layer, and data transport — so the engineering team works with sensor data, not sensor wiring.
 
@@ -16,13 +16,13 @@ Two connection modes. Same board:
 - **GMSL** — up to 15 m. Single coax carries power, video, and sensor data together. For camera + sensor setups where both need to run over one cable.
 - **CAN-FD** — up to 40 m (at reduced data rate). Sensor data only. Longer reach, no video. For distributed sensor networks across a chassis or structure.
 
-## What it does
+## Description
 
 NXS sits between the sensor and the host computer. On the sensor side, it powers the Click board and MIPI camera and reads their output. On the host side, it publishes measurements in SI units over CAN-FD or serial, and serves the same data over an I²C register map — reachable directly or tunnelled through the GMSL link. Every field is self-described on the wire (name, unit, scale, semantic), so a host decodes any sensor with no sensor-specific code, using the bundled `nxs` tool or stock OpenCyphal tooling. The bundled bridge maps those self-described fields onto standard ROS 2 topics — a newly added sensor appears on the right topic with no per-sensor wiring.
 
 Eight validated sensor drivers ship out of the box. Beyond those, a driver is a short, human-readable description of the sensor: the AI-agent skill writes it from the sensor's datasheet — for any mikroBUS Click sensor on I²C, SPI, UART, AN, or PWM — and an engineer, or an AI agent, can read and modify it directly. No firmware rebuild, no shipping the unit back.
 
-## Core benefits
+## Key benefits
 
 - A Click sensor, a MIPI camera, and power — one GMSL coax carries it all.
 - Driver work is done before you plug in. The AI-agent skill handles driver generation.
@@ -71,6 +71,12 @@ Eight validated sensor drivers ship out of the box. Beyond those, a driver is a 
 | AI driver generation | Host / dev | Writes a driver from the sensor datasheet — any Click sensor on I²C / SPI / UART / AN / PWM |
 | Suite management | Host | One `suite.yaml` converges firmware, drivers, and addresses across every unit; drift reporting built in |
 
-## Who it's for
+## Applications
 
 NXS is relevant to any team that needs to place sensors or cameras away from the main compute unit — robotics, autonomous vehicles, industrial automation, research platforms. It removes the integration work between the sensor and the software stack, so the team focuses on what the sensor data is used for, not how to get it.
+
+## Documentation
+
+- [Technical specifications](../../reference/nxs-specifications/)
+- [Datasheet](../datasheet/) — electrical ratings, connectors and pinouts, mechanical
+- [FAQ](../../reference/nxs-faq/)
