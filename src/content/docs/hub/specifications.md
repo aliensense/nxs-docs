@@ -9,7 +9,7 @@ sidebar:
 
 ## Overview
 
-The BrainKLX NXS Hub is a compact GMSL3/2 deserialization interface designed to receive two camera links and present them as dual MIPI CSI-2 outputs for downstream processing. It is intended for embedded vision systems that need a robust, compact bridge between remote camera modules and a host processor.
+The NXS Hub is a compact GMSL3/2 deserialization interface designed to receive two camera links and present them as dual MIPI CSI-2 outputs for downstream processing. It is intended for embedded vision systems that need a robust, compact bridge between remote camera modules and a host processor.
 
 Built around the Maxim MAX96792 deserializer, the board combines high-speed video routing, power management, control interfaces, and protection features in a single module. Its architecture supports dual-camera use cases while preserving clear, modular integration paths for host-side control and configuration.
 
@@ -33,7 +33,7 @@ The NXS Hub receives video and control signals from remote camera modules over G
 flowchart LR
     CAMA[Camera A] --> GMSL_A[GMSL Link A]
     CAMB[Camera B] --> GMSL_B[GMSL Link B]
-    GMSL_A --> HUB[BrainKLX NXS Hub]
+    GMSL_A --> HUB[NXS Hub]
     GMSL_B --> HUB
     HUB --> CSI_A[CSI-2 Port A]
     HUB --> CSI_B[CSI-2 Port B]
@@ -78,7 +78,7 @@ flowchart LR
 
 ## Notes
 
-This document is based on the reference netlist and interface analysis for the BrainKLX NXS Hub. Final validation should be aligned with the latest schematic, layout, and firmware integration documentation.
+This document is based on the reference netlist and interface analysis for the NXS Hub. Final validation should be aligned with the latest schematic, layout, and firmware integration documentation.
 
 ## Documentation
 

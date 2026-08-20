@@ -22,7 +22,7 @@ export default defineConfig({
 	integrations: [
 		starlight({
 			plugins: versions.length > 0 ? [starlightVersions({ versions })] : [],
-			title: 'NXS Docs',
+			title: 'NXS',
 			description: 'Documentation for the Aliensense NXS sensor co-processor.',
 			tagline: 'Any sensor, SI units on the wire',
 			social: [
@@ -42,8 +42,8 @@ export default defineConfig({
 			head: [
 				{ tag: 'meta', attrs: { name: 'theme-color', content: '#0b1220' } },
 				{ tag: 'meta', attrs: { property: 'og:type', content: 'website' } },
-				{ tag: 'meta', attrs: { property: 'og:site_name', content: 'NXS Docs' } },
-				{ tag: 'meta', attrs: { property: 'og:title', content: 'NXS Docs' } },
+				{ tag: 'meta', attrs: { property: 'og:site_name', content: 'NXS' } },
+				{ tag: 'meta', attrs: { property: 'og:title', content: 'NXS' } },
 				{
 					tag: 'meta',
 					attrs: {

@@ -1,5 +1,5 @@
 ---
-title: "BrainKLX NXS Hub"
+title: "NXS Hub"
 sidebar:
   order: 1
 # Placed manually from als-docs marketing/NXS Hub (NXS_Hub_Brochure.md) at be9331c; update by PR here. Revision history lives in the als-docs Document Control block.
@@ -9,7 +9,7 @@ sidebar:
 
 ## Overview
 
-The BrainKLX NXS Hub is a purpose-built interface module for modern vision systems that need to bridge remote camera links into a host-friendly CSI-2 environment. It brings together deserialization, power management, control handling, and protection in a compact form factor that is suitable for robotics, industrial sensing, and embedded vision applications.
+The NXS Hub is a purpose-built interface module for modern vision systems that need to bridge remote camera links into a host-friendly CSI-2 environment. It brings together deserialization, power management, control handling, and protection in a compact form factor that is suitable for robotics, industrial sensing, and embedded vision applications.
 
 Rather than forcing system designers to build separate camera-link conditioning and control infrastructure, the NXS Hub consolidates those functions into a single module. It accepts two GMSL inputs and makes them available through clean, structured output paths for downstream compute platforms.
 
@@ -38,7 +38,7 @@ The product is well suited to applications where camera data must travel from re
 
 ## Positioning
 
-BrainKLX NXS Hub is a practical and scalable interface solution for systems that need a reliable bridge between GMSL camera transport and downstream CSI-2 processing.
+The NXS Hub is a practical and scalable interface solution for systems that need a reliable bridge between GMSL camera transport and downstream CSI-2 processing.
 
 ## Documentation
 
