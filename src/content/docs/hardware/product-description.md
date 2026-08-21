@@ -79,4 +79,4 @@ NXS is relevant to any team that needs to place sensors or cameras away from the
 
 - [Technical specifications](../../reference/nxs-specifications/)
 - [Datasheet](../datasheet/) — electrical ratings, connectors and pinouts, mechanical
-- [FAQ](../../reference/nxs-faq/)
+- [FAQ](../faq/)

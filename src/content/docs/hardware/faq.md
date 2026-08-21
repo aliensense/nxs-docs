@@ -1,23 +1,9 @@
 ---
-title: "NXS — Frequently Asked Questions"
+title: Frequently Asked Questions
 sidebar:
-  order: 6
-# Mirrored from the firmware repository (docs/specs/nxs-faq.md) at pre-release v1.0.0-rc1-193-g3e0ac604d (3e0ac604d).
-# Do not edit here — changes flow through the next release.
+  order: 3
+  label: FAQ
 ---
-
-Applies to: NXS v1.0 · product version 1.0.x
-
-| Document set | |
-|---|---|
-| [Device Reference](../nxs-device-reference/) | interfaces, performance and limits, supported sensors, versioning |
-| [Interface Description](../nxs-host-interface/) | transports, register map, commands, procedures |
-| [Integration & Operation Manual](../nxs-integration-manual/) | design-in, host setup, workflows |
-| [Driver Development Guide](../nxs-driver-development/) | authoring drivers for unsupported sensors |
-| **FAQ** (this document) | frequently asked questions |
-| [Technical Specifications](../nxs-specifications/) | capability summary tables |
-
-> Answers marked **[VERIFY]** await hardware confirmation.
 
 ## Product & Use Cases
 
@@ -53,15 +39,18 @@ Yes. The two functions are independent: the video path is hardware serialization
 That depends on which connector your robot or host computer has. Three cases:
 
 - **Your robot has a GMSL connector (deserializer):** connect NXS directly over the coax. You get **both video and sensor data** on that single cable — no extra units, no additional hardware.
-- **Your robot has only a CAN connector:** connect NXS over CAN-FD. Video cannot travel over CAN, but **sensor data** is delivered in full — SI-unit samples, microsecond timestamps, multi-node addressing. No extra hardware needed.
+- **Your robot has only a CAN connector:** connect NXS over CAN-FD. Video cannot travel over CAN, but **sensor data** is delivered in full — SI-unit samples, microsecond timestamps, multi-node addressing. The NXS board carries its CAN-FD transceiver, so the NXS side needs no extra hardware; your host needs its own CAN-FD interface. (The transceiver requirement in the Integration & Operation Manual addresses carrier designers integrating the bare co-processor module — the NXS board is such a carrier and satisfies it.)
 - **Your robot has only a UART port:** connect UART-to-UART (Cyphal/serial, 460800 baud). Same as CAN — **sensor data only, no video**. No extra hardware needed.
 - **You want video but have no GMSL on the host:** you need the **NXS Hub** — a separate device that sits between your NXS nodes and the host computer. The Hub:
   - **Aggregates multiple GMSL streams** from NXS nodes and forwards the data to the host over MIPI.
   - **Supplies power** to the link (Power-over-Coax for the connected nodes).
-  - **Hosts smart extension boards** through a dedicated Molex connector — add-on boards that preprocess data at the edge before it reaches the host. **[VERIFY — extension board specs, Molex part, supported preprocessing functions]**
   - **Protects the GMSL line from overvoltage**, keeping both your NXS nodes and your host hardware safe from electrical faults on the cable run.
 
-One Hub serves multiple NXS nodes; you need one per host, not one per sensor. **[VERIFY — max number of NXS nodes per Hub]**
+One Hub serves two NXS nodes (dual GMSL inputs); you need one per host, not one per sensor.
+
+### Can a Jetson or Raspberry Pi use NXS without the Hub?
+
+Yes, for everything except video. Over CAN-FD (a Jetson's built-in CAN controller, a USB-CAN adapter on either host, or a CAN HAT on a Raspberry Pi) or UART, a single NXS board delivers the complete sensor feature set: SI-unit streams, driver upload, calibration, commissioning, and firmware update. The I²C register map is not available without the link — it is reached through the GMSL side-channel, so it arrives with the Hub. The camera path is GMSL and terminates in a deserializer, so a host with no GMSL input has no video path — that is what the Hub (or a carrier's own GMSL deserializer input, per the previous question) provides.
 
 ### Is NXS a development tool or production-ready?
 
@@ -73,11 +62,13 @@ NXS is an evaluation and prototyping module. It is **not** certified for safety-
 
 ### Which sensors work out of the box?
 
-Eight sensor families ship with validated drivers, including the `iam20680` 6-axis IMU, the `ms5611` barometer/altimeter (Altitude 6 Click), and the `fxos8700` 6DOF eCompass (6DOF IMU 3 Click). The full validated-driver list is the supported-sensors table in the [Device Reference](../nxs-device-reference/).
+Eight sensor families ship with validated drivers, including the `iam20680` 6-axis IMU, the `ms5611` barometer/altimeter (Altitude 6 Click), and the `fxos8700` 6DOF eCompass (6DOF IMU 3 Click). The full validated-driver list is the supported-sensors table in the [Device Reference](../../reference/nxs-device-reference/).
 
 ### What about a Click board that isn't on the list?
 
-For any other mikroBUS Click sensor on I²C, SPI, UART, AN, or PWM, the **AI-agent skill generates the driver**. A driver is authored as a small Python class, compiled to a portable NXS image on your host, and uploaded to the device — the sensor's datasheet becomes the code. The device firmware itself is never rebuilt.
+For any other mikroBUS Click sensor on I²C, SPI, UART, AN, or PWM, the **`nxs-generate-sensor-driver` skill generates the driver** — it ships in the SDK and runs in a coding agent. A driver is authored as a small Python class, compiled to a portable NXS image on your host, and uploaded to the device — the sensor's datasheet becomes the code. The device firmware itself is never rebuilt.
+
+In practice the loop is: hand the sensor's datasheet to the skill, seat the board, `nxs upload` the generated driver, and `nxs stream` decoded SI samples — then read or adjust the driver class directly if a register or scale needs a correction; each iteration is an upload, not a rebuild. The compiler refuses anything it cannot compile faithfully, so a driver that uploads is one whose register traffic matches its source.
 
 ### Do I need to write firmware?
 
@@ -112,13 +103,17 @@ Both work at the same time; use either or both.
 
 A single cross-transport host CLI (and Python SDK, `NxsClient`) that drives every operation over I²C, Cyphal/serial, or Cyphal/CAN: probe, upload/compile a driver, run/stop, read parameters and outputs, stream decoded samples, manage the driver store, set decimation, commission node-ID and subject-IDs, and push firmware.
 
+### Where do I get the `nxs` tool and the SDK?
+
+The `nxs` wheel is published with each firmware release in the [`aliensense/nxs`](https://github.com/aliensense/nxs) repository; one wheel covers the CLI, the Python SDK, and every transport, and the repository carries the `nxs-generate-sensor-driver` skill under `skills/`. Install the wheel with pip or uv and make first contact with `nxs probe` — [Getting Started](../../getting-started/install/) walks through it.
+
 ### Can I run multiple NXS nodes on one bus?
 
 Yes. Node-ID range is 0–125 (default 125; 126 and 127 are reserved), and subject-IDs are writable, persistent registers you can re-commission per node. Sharing a subject-ID across identical boards is intended.
 
 ### How is firmware updated?
 
-Over the same host transports, via the `nxs` tool — including a recovery path if an update is interrupted.
+Over the same host transports, via the `nxs` tool. An interrupted update is harmless: the device keeps or reverts to the previous image automatically and the transfer is simply retried. A last-resort serial recovery exists for an application that no longer boots.
 
 ### Is any of the software open source?
 
@@ -180,7 +175,7 @@ CE / FCC Part 15B (Class A) / RoHS / WEEE — status per the product page.
 
 ### How is NXS different from USB?
 
-USB hits a hard wall at ~5 m, and the only fix the ecosystem offers is a shorter, higher-quality cable. NXS runs a single cable 15 m (GMSL) or 40 m (CAN-FD) — with power and data on the same line.
+USB's passive reach is ~5 m; going farther means adding active or optical extenders. NXS runs a single cable 15 m (GMSL, power over the same coax) or 40 m (CAN-FD, power in the same harness).
 
 ### How is NXS different from micro-ROS?
 
@@ -223,7 +218,7 @@ Costs are calculated at checkout by destination and weight. Delivery dates are e
 
 ### Do you ship internationally?
 
-Yes, to most countries worldwide. We cannot ship to countries under  sanctions, and some products may have export restrictions — we comply with UAE, US, and EU export control laws. You are responsible for import duties, taxes, and customs fees; we provide accurate customs documentation.
+Yes, to most countries worldwide. We cannot ship to countries under sanctions, and some products may have export restrictions — we comply with UAE, US, and EU export control laws. You are responsible for import duties, taxes, and customs fees; we provide accurate customs documentation.
 
 ### Can I cancel or modify my order?
 
@@ -279,7 +274,7 @@ Yes — contact sales@aliensense.com for custom development and OEM/design-in in
 
 ### Where can I find the full specifications?
 
-The **NXS Datasheet** (integrator-level: electrical ratings, connector pinouts, register map, driver catalog) is available on the product page alongside the compliance documents (CE DoC, RoHS, FCC).
+The **NXS Datasheet** (electrical ratings, connector pinouts, mechanical) is available on the product page alongside the compliance documents (CE DoC, RoHS, FCC). The register map is specified in the [Interface Description](../../reference/nxs-host-interface/); the supported-driver catalog is in the [Device Reference](../../reference/nxs-device-reference/).
 
 ### Still have questions?
 
