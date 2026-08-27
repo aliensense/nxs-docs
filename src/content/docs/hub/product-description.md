@@ -2,7 +2,7 @@
 title: "NXS Hub"
 sidebar:
   order: 1
-# Placed manually from als-docs marketing/NXS Hub (NXS_Hub_Brochure.md) at be9331c; update by PR here. Revision history lives in the als-docs Document Control block.
+# Mirrored from als-docs marketing/NXS Hub/NXS_Hub_Brochure.md by scripts/mirror-marketing.py - edit there, never here.
 ---
 
 *Aliensense · Version v1.3 · 2026-08-20*
@@ -18,7 +18,7 @@ Rather than forcing system designers to build separate camera-link conditioning 
 The NXS Hub simplifies integration at the boundary between camera hardware and embedded processing. It allows teams to focus on system behavior and application logic rather than low-level interconnect complexity.
 
 - Reduces integration complexity for dual-camera systems
-- Allows managing two video streams simultaneously
+- Allows managing two video streams simultaneously   
 - Allows selecting one of two output paths — FFC to a host, mezzanine to an embedded carrier.
 - Supports long-reach GMSL transport with a compact receiver module
 - Presents a clear CSI-2 output path for host processors

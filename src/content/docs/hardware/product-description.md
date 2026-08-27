@@ -2,7 +2,7 @@
 title: "Aliensense NXS"
 sidebar:
   order: 1
-# Copied from als-docs marketing/NXS (NXS_Brochure.md) at 33bbb5e; update by PR here.
+# Mirrored from als-docs marketing/NXS/NXS_Brochure.md by scripts/mirror-marketing.py - edit there, never here.
 ---
 
 *v0.10 · 2026-08-18*

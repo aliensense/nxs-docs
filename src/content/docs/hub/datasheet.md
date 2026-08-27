@@ -2,7 +2,7 @@
 title: "NXS Hub — Datasheet"
 sidebar:
   order: 3
-# Placed manually from als-docs marketing/NXS Hub (NXS_Hub_Datasheet.md) at d38981b; update by PR here.
+# Mirrored from als-docs marketing/NXS Hub/NXS_Hub_Datasheet.md by scripts/mirror-marketing.py - edit there, never here.
 ---
 
 **Project:** NXS Hub
@@ -10,20 +10,6 @@ sidebar:
 **Design revision:** V2.3 
 **Document date:** 2026-08-21
 **Document version:** 1.1
-
-## Table of Contents
-
-1. [Features](#1-features)
-2. [Applications](#2-applications)
-3. [Description](#3-description)
-4. [Absolute Maximum Ratings](#4-absolute-maximum-ratings)
-5. [Recommended Operating Conditions](#5-recommended-operating-conditions)
-6. [Interface Descriptions](#6-interface-descriptions)
-7. [Connector Descriptions and Pinouts](#7-connector-descriptions-and-pinouts)
-8. [Indicators and Test Points](#8-indicators-and-test-points)
-9. [Mechanical Information](#9-mechanical-information)
-10. [Cautionary Statement](#10-cautionary-statement)
-11. [Support](#11-support)
 
 
 ---
@@ -450,7 +436,6 @@ power supplies removed (§5.1), and power follows the §5.1 sequence — host
 up first, NXS Hub down first.
 
 Safety instructions: see the *Important Safety Instructions* document on the product page.
-
 ---
 
 ## 11. Support
@@ -460,14 +445,3 @@ Safety instructions: see the *Important Safety Instructions* document on the pro
 - Aliensense · [aliensense.com](https://aliensense.com)
 
 ---
-
-<div hidden>
-
-## Document Control
-
-| Rev | Date | Notes |
-| :--- | :--- | :--- |
-| 1.0 | 2026-08-05 | Numbered technical specification: functional description, board features, block diagram, ratings, operating conditions, safety, interfaces, connectors and pinouts, indicators and test points, mechanical. |
-| 1.1 | 2026-08-18 | Chapters reordered onto the product-datasheet spine: Features and Applications open the document (features table moved from chapter 2; applications moved in from the specifications document), Description carries the functional description and block diagram, the ratings and operating-conditions chapters follow, and Interface Descriptions, Connectors, Indicators, Mechanical Information, Cautionary Statement (the safety-instructions link), and Support close it. Figures renumbered; file renamed to `NXS_Hub_Datasheet.md`. Power-sequencing requirement added (§5.1): host up first, Hub down first. |
-
-</div>

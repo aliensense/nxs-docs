@@ -2,7 +2,7 @@
 title: "NXS Hub: Technical Specifications"
 sidebar:
   order: 2
-# Placed manually from als-docs marketing/NXS Hub (NXS_Hub_Specifications.md) at cd79ab0; update by PR here.
+# Mirrored from als-docs marketing/NXS Hub/NXS_Hub_Specifications.md by scripts/mirror-marketing.py - edit there, never here.
 ---
 
 *Aliensense · Version v1.2 · 2026-08-18*
@@ -84,13 +84,3 @@ This document is based on the reference netlist and interface analysis for the N
 
 - [Brochure](../product-description/) — positioning overview
 - [Datasheet](../datasheet/) — full ratings, interfaces, connectors and pinouts, mechanical
-
-<div hidden>
-
-## Document Control
-
-| Rev | Date | Notes |
-| :--- | :--- | :--- |
-| 1.2 | 2026-08-18 | Applications moved to the datasheet; Documentation section linking the sibling documents. File renamed to `NXS_Hub_Specifications.md` (this document carries the overview and specification tables; the numbered technical specification is the datasheet). |
-
-</div>

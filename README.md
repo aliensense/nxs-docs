@@ -5,15 +5,17 @@ Built with [Astro Starlight](https://starlight.astro.build/).
 
 ## Layout
 
-- `src/content/docs/` — the site content: landing page, getting-started,
-  and hardware pages are authored in this repository.
+- `src/content/docs/` — the site content: the landing page,
+  getting-started, and the FAQ are authored in this repository.
 - `src/content/docs/reference/` — **machine-managed**: the released
   specification set, mirrored from the firmware repository on every
   release. Do not edit these files here; fixes go to the firmware
   repository's `docs/specs/` and arrive with the next release.
-- `src/content/docs/hub/` — the NXS Hub pages, **placed manually** by
-  PR from the marketing sources; the mirror never touches them, and they
-  ride the per-release version snapshots with the rest of the site.
+- The product pages (`hardware/product-description`, `hardware/datasheet`,
+  `hub/*`) and their images under `src/assets/` — **machine-managed**:
+  rewritten from the marketing repository's sources by its
+  `marketing-mirror` workflow on every merge. Do not edit these files
+  here; fixes go to `als-docs` `marketing/` and arrive on push.
 - `versions.json` + `src/content/docs/<tag>/` + `src/content/versions/`
   — **machine-managed**: one frozen site version per published release,
   appended by the firmware repository's release-export workflow. The
