@@ -2,13 +2,13 @@
 title: "NXS Hub — Datasheet"
 sidebar:
   order: 3
-# Placed manually from als-docs marketing/NXS Hub (NXS_Hub_Datasheet.md) at cd79ab0; update by PR here.
+# Placed manually from als-docs marketing/NXS Hub (NXS_Hub_Datasheet.md) at d38981b; update by PR here.
 ---
 
 **Project:** NXS Hub
 **Board:** GMSL RECEIVER
 **Design revision:** V2.3 
-**Document date:** 2026-08-18
+**Document date:** 2026-08-21
 **Document version:** 1.1
 
 ## Table of Contents
@@ -184,6 +184,15 @@ flowchart LR
 | Operating PoC voltage range for GMSL video stream | V(12V) | 7 | 12 | 17 | V | 
 
 ### 5.1 Power sequencing
+
+:::caution
+Make and break every connection cold. No power supply may be connected
+to the NXS Hub or the host while the FFC, board-to-board, or coax
+connections are handled — remove both supplies entirely. A supply that
+is plugged into mains but switched off does not count as removed:
+ground-potential differences and stored charge through a connected
+supply are enough to destroy the host's CSI-2 inputs.
+:::
 
 Apply power in this order and remove it in the reverse order:
 
@@ -435,6 +444,10 @@ Odd pins = **12 V**, even pins = **GND**, pin 51 = **GND**. (Pins 1–50 alterna
 ---
 
 ## 10. Cautionary Statement
+
+Never hot-plug the camera or host connections. Cabling happens with both
+power supplies removed (§5.1), and power follows the §5.1 sequence — host
+up first, NXS Hub down first.
 
 Safety instructions: see the *Important Safety Instructions* document on the product page.
 

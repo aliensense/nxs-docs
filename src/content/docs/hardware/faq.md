@@ -157,6 +157,15 @@ The auxiliary board communicates with the NXS compute board over the same signal
 
 Handle the board by its edges, store it ESD-safe and dry, and protect it from moisture, conductive debris, and mechanical shock during operation.
 
+### Can I connect the camera or CSI cabling while powered?
+
+No. Every connection to the NXS Hub and the host is made cold, with both
+power supplies removed entirely — a supply that is plugged into mains but
+switched off still carries ground-potential differences and stored charge
+that can destroy the host's CSI-2 inputs. Power up the host first, then
+the Hub; power down the Hub first, then the host. The
+[NXS Hub datasheet](../../hub/datasheet/) §5.1 is the normative sequence.
+
 ### How is it powered?
 
 From a 12 V source (tolerant 4.7–16 V) — no bench supply required in the field. On the GMSL link, the remote serializer side is powered by Power-over-Coax over the same single coax that carries video and sensor data.
