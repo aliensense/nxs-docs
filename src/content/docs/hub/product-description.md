@@ -2,6 +2,9 @@
 title: "NXS Hub"
 sidebar:
   order: 1
+banner:
+  content: |
+    ⚠️ <b>Same-side (Type A) FFC cables only.</b> An opposite-side (Type D) cable mirrors the pinout and shorts the port — see the <a href="/nxs-docs/hub/datasheet/#62-mipi-csi-2-output--port-a-ffc">datasheet warning</a>.
 # Mirrored from als-docs marketing/NXS Hub/NXS_Hub_Brochure.md by scripts/mirror-marketing.py - edit there, never here.
 ---
 

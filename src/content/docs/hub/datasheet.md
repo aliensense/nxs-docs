@@ -2,13 +2,16 @@
 title: "NXS Hub — Datasheet"
 sidebar:
   order: 3
+banner:
+  content: |
+    ⚠️ <b>Same-side (Type A) FFC cables only.</b> An opposite-side (Type D) cable mirrors the pinout and shorts the port — see the <a href="/nxs-docs/hub/datasheet/#62-mipi-csi-2-output--port-a-ffc">datasheet warning</a>.
 # Mirrored from als-docs marketing/NXS Hub/NXS_Hub_Datasheet.md by scripts/mirror-marketing.py - edit there, never here.
 ---
 
 **Project:** NXS Hub
 **Board:** GMSL RECEIVER
 **Design revision:** V2.3 
-**Document date:** 2026-08-21
+**Document date:** 2026-09-08
 **Document version:** 1.1
 
 
@@ -200,7 +203,17 @@ the host's unpowered I/O and back-power it through the protection diodes.
 - **Protection:** ESD + PoC filtering network per link.
 
 ### 6.2 MIPI CSI-2 Output — Port A (FFC)
+
+:::caution
+Use **same-side (Type A) FFC cables only** — also sold as Type 1 or
+Type BD. An opposite-side cable (Type D / Type 2 / Type AD) mirrors
+the pinout end for end and short-circuits the port and the host the
+moment power is applied. The two types look identical at a glance:
+check which side the contacts face at each end before connecting.
+:::
+
 - **Physical:** `X3`, 22+1 pos FFC/FPC (`0545482272`).
+- **Cable:** same-side (Type A) FFC, 22 positions, 0.5 mm pitch.
 - **Lanes:** `CSIA_CLK±`, `CSIA_D0±`…`CSIA_D3±` (4 data + 1 clock, D-PHY).
 - **Sideband:** `FFC_SCL`, `FFC_SDA` (I²C), `FFC_RESET_B`, `DC_3V3` power out.
 - **Role:** **Primary host video/data output.**
@@ -307,6 +320,7 @@ Odd pins = **12 V**, even pins = **GND**, pin 51 = **GND**. (Pins 1–50 alterna
 
 ### 7.3 X3 — FFC / MIPI CSI-2 Output (Port A) — *Primary Host Output*
 **Part:** `0545482272` (Molex) · 22+1 positions
+**Cable:** same-side (Type A) FFC only — see the §6.2 warning.
 
 | Pin | Net | Description |
 |---:|---|---|
@@ -433,7 +447,8 @@ Odd pins = **12 V**, even pins = **GND**, pin 51 = **GND**. (Pins 1–50 alterna
 
 Never hot-plug the camera or host connections. Cabling happens with both
 power supplies removed (§5.1), and power follows the §5.1 sequence — host
-up first, NXS Hub down first.
+up first, NXS Hub down first. The FFC output takes same-side (Type A)
+cables only (§6.2).
 
 Safety instructions: see the *Important Safety Instructions* document on the product page.
 ---

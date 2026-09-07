@@ -166,6 +166,16 @@ that can destroy the host's CSI-2 inputs. Power up the host first, then
 the Hub; power down the Hub first, then the host. The
 [NXS Hub datasheet](../../hub/datasheet/) §5.1 is the normative sequence.
 
+### Which FFC cable does the Hub's CSI output take?
+
+A same-side FFC (Type A — also sold as Type 1 or Type BD), 22 positions,
+0.5 mm pitch. Never an opposite-side cable (Type D / Type 2 / Type AD):
+its contacts mirror the pinout end for end, which short-circuits the
+port and the host the moment power is applied. The two types look
+identical at a glance — check which side the contacts face at each end
+before connecting. The [NXS Hub datasheet](../../hub/datasheet/) §6.2
+carries the requirement.
+
 ### How is it powered?
 
 From a 12 V source (tolerant 4.7–16 V) — no bench supply required in the field. On the GMSL link, the remote serializer side is powered by Power-over-Coax over the same single coax that carries video and sensor data.
