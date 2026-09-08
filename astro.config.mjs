@@ -19,6 +19,12 @@ export default defineConfig({
 	// DOCS_BASE overrides the base path for the staging half of the Pages
 	// artifact (deploy.yml builds the staging branch under /staging/).
 	base: process.env.DOCS_BASE ?? (isGitHubActions ? `/${repositoryName}` : '/'),
+	// Two reference documents were renamed when the sensor add-on noun
+	// became "patch"; the old addresses keep resolving.
+	redirects: {
+		'/reference/nxs-driver-development/': '/reference/nxs-patch-authoring/',
+		'/reference/nxs-cam-descriptors/': '/reference/nxs-camera-patches/',
+	},
 	integrations: [
 		starlight({
 			plugins: versions.length > 0 ? [starlightVersions({ versions })] : [],
@@ -34,6 +40,7 @@ export default defineConfig({
 			],
 			sidebar: [
 				{ label: 'Getting Started', autogenerate: { directory: 'getting-started' } },
+				{ label: 'Guides', autogenerate: { directory: 'guides' } },
 				{ label: 'NXS', autogenerate: { directory: 'hardware' } },
 				{ label: 'NXS Hub', autogenerate: { directory: 'hub' } },
 				{ label: 'Reference', autogenerate: { directory: 'reference' } },
@@ -48,7 +55,7 @@ export default defineConfig({
 					tag: 'meta',
 					attrs: {
 						property: 'og:description',
-						content: 'Plug in a sensor, upload a driver, read SI units — the NXS documentation set.',
+						content: 'Plug in a sensor, upload a patch, read SI units — the NXS documentation set.',
 					},
 				},
 				{ tag: 'meta', attrs: { property: 'og:image', content: '/favicon.svg' } },

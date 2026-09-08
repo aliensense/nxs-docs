@@ -16,6 +16,15 @@ Built with [Astro Starlight](https://starlight.astro.build/).
   rewritten from the marketing repository's sources by its
   `marketing-mirror` workflow on every merge. Do not edit these files
   here; fixes go to `als-docs` `marketing/` and arrive on push.
+- `src/content/docs/guides/` — **machine-managed**: the released
+  guide set, mirrored from the firmware repository on every release.
+  Do not edit these files here; fixes go to the firmware repository's
+  `docs/guides/` and arrive with the next release.
+- The product pages (`hardware/product-description`, `hardware/datasheet`,
+  `hub/*`) and their images under `src/assets/` — **machine-managed**:
+  rewritten from the marketing repository's sources by its
+  `marketing-mirror` workflow on every merge. Do not edit these files
+  here; fixes go to `als-docs` `marketing/` and arrive on push.
 - `versions.json` + `src/content/docs/<tag>/` + `src/content/versions/`
   — **machine-managed**: one frozen site version per published release,
   appended by the firmware repository's release-export workflow. The
