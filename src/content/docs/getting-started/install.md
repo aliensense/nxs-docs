@@ -9,17 +9,23 @@ Requires Python ≥ 3.10. The base install covers I²C and serial; the
 Cyphal DSDL ships vendored in the wheel, so the install is
 self-contained.
 
+The `nxs` wheel ships with your kit. If you need it again, or a newer
+release, email [support@aliensense.com](mailto:support@aliensense.com).
+Install it from the file: the name `nxs` on PyPI belongs to an unrelated
+package, so `pip install nxs` or `uv tool install nxs` without a file path
+installs the wrong thing.
+
 With **uv** (native device access; the only option on macOS, where Docker
 cannot reach USB):
 
 ```sh
-uv tool install 'nxs[cyphal]'      # omit [cyphal] for an I2C-only install
+uv tool install './nxs-<version>-py3-none-any.whl[cyphal]'   # omit [cyphal] for an I2C-only install
 ```
 
 With **pip**, from a release wheel:
 
 ```sh
-python3 -m pip install 'nxs-<version>-py3-none-any.whl[cyphal]'
+python3 -m pip install './nxs-<version>-py3-none-any.whl[cyphal]'
 ```
 
 Verify:
