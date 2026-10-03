@@ -1,7 +1,8 @@
 ---
-title: "NXS — Smart Sensor Co-Processor — Device Reference"
+title: NXS — Smart Sensor Co-Processor — Device Reference
 sidebar:
   order: 2
+slug: v1.1.0-rc2/reference/nxs-device-reference
 ---
 
 Applies to: NXS v1.1 · product version 1.1.x
@@ -21,11 +22,11 @@ Applies to: NXS v1.1 · product version 1.1.x
 
 NXS is a sensor co-processor module: it runs sensor personalities as sandboxed bytecode on an on-device virtual machine and serves calibrated, SI-unit samples to a host over I²C, UART (Cyphal/serial), or CAN-FD (Cyphal/CAN). Samples are scaled with the sensor's datasheet-nominal sensitivities — including the part's own compensation math where its datasheet defines it (e.g. a barometer's temperature polynomial over its factory coefficients, run on-device). Calibration is per unit: a stored affine (M·v + b) per vector sensor plus a mounting-orientation code, applied in the SI tier — the raw sample stream carries unmodified sensor counts (§3.1). A personality is uploaded at runtime — no firmware rebuild per sensor — and every output field is self-described (name, type, scale/offset, canonical SI unit, semantic), so a host decodes any sensor without sensor-specific code. Sensors attach on a mikroBUS socket (I²C, SPI, or UART).
 
-- Compute: 32-bit Arm Cortex-M4F @ 160 MHz
-- Flash: 512 KB — 48 KB bootloader, 2 × 220 KB firmware slots (A/B update), 24 KB configuration storage
-- SRAM: 112 KB
-- Firmware update: dual-slot with automatic rollback (watchdog 3 s, self-confirm ≈ 1 s); recovery path independent of the application
-- Persistent state: personality store (8 slots, driver and camera personalities alike), node identity and subject configuration, per-subject decimation, per-unit calibration record
+* Compute: 32-bit Arm Cortex-M4F @ 160 MHz
+* Flash: 512 KB — 48 KB bootloader, 2 × 220 KB firmware slots (A/B update), 24 KB configuration storage
+* SRAM: 112 KB
+* Firmware update: dual-slot with automatic rollback (watchdog 3 s, self-confirm ≈ 1 s); recovery path independent of the application
+* Persistent state: personality store (8 slots, driver and camera personalities alike), node identity and subject configuration, per-subject decimation, per-unit calibration record
 
 ## 2. Interfaces
 

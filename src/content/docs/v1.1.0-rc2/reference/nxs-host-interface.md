@@ -1,7 +1,8 @@
 ---
-title: "NXS host interface specification"
+title: NXS host interface specification
 sidebar:
   order: 5
+slug: v1.1.0-rc2/reference/nxs-host-interface
 ---
 
 Applies to: NXS v1.1 · register-map contract 1 (`PROTO_VERSION` = 1) · image format 2.3 (§10.1); the tool names the firmware it requires (§2)
@@ -19,7 +20,7 @@ Applies to: NXS v1.1 · register-map contract 1 (`PROTO_VERSION` = 1) · image f
 
 This document is the contract between an NXS device and any host that drives it. It specifies the two host-facing transports, the I²C register map, the command set, the firmware-update procedures, and the personality lifecycle. It ships with the product; firmware and host tools conform to it.
 
----
+***
 
 ## 1. Device model
 
@@ -62,14 +63,14 @@ Wire-inherent exceptions, complete list: SI pub/sub delivery exists only on Cyph
 
 Register `PROTO_VERSION` (`0x19`, read-only) identifies the register-map contract. This document describes version `1`. The version counts contract revisions: a change that gives an existing register a new meaning increments it; growth in reserved space (a new command, a new `XFER_TYPE` mode, a new live register) does not, and rides a PATCH release. Independently of the contract, the `nxs` tool names the firmware it requires: every verb but `probe`, `push-fw`, and `recover` refuses a device whose build identity (§6.10) is older than that firmware and prints the update command, so a host never drives a device with verbs it lacks.
 
----
+***
 
 ## 3. I²C transport
 
 ### 3.1 Transactions
 
-- **Write**: `[register address] [data …]` in one transaction. Up to 32 data bytes (SMBus block-write limit; all multi-byte windows are sized accordingly).
-- **Read**: write `[register address]`, then read N bytes. The address pointer auto-increments on each byte read, so a block read returns a contiguous register range.
+* **Write**: `[register address] [data …]` in one transaction. Up to 32 data bytes (SMBus block-write limit; all multi-byte windows are sized accordingly).
+* **Read**: write `[register address]`, then read N bytes. The address pointer auto-increments on each byte read, so a block read returns a contiguous register range.
 
 ### 3.2 Write semantics
 
@@ -79,11 +80,11 @@ Control writes (`CMD`, the selectors `PARAM_SELECT` / `OUTPUT_SELECT` / `DRIVER_
 
 Registers are served byte-by-byte while the device runs, so a multi-byte read is not atomic. The map is designed around this:
 
-- **Pacing registers are one byte wide** (`XFER_PHASE`, `XFER_ACK`, `STATUS`, `RUNNER_STATE`, …). A one-byte read is served in a single transaction and cannot tear.
-- **The sample window is latched per transaction.** The device snapshots the whole `SAMPLE_DATA` record when a read transaction first touches the window base and serves every byte — across chunked continuations — from that snapshot, so one read returns one coherent record (§6.3). Re-addressing the window base starts a fresh snapshot.
-- **A sample burst is latched per transaction.** A read that follows a cursor written after the `SAMPLE_DATA` pointer is built whole at its first byte and served from that copy (§6.3).
+* **Pacing registers are one byte wide** (`XFER_PHASE`, `XFER_ACK`, `STATUS`, `RUNNER_STATE`, …). A one-byte read is served in a single transaction and cannot tear.
+* **The sample window is latched per transaction.** The device snapshots the whole `SAMPLE_DATA` record when a read transaction first touches the window base and serves every byte — across chunked continuations — from that snapshot, so one read returns one coherent record (§6.3). Re-addressing the window base starts a fresh snapshot.
+* **A sample burst is latched per transaction.** A read that follows a cursor written after the `SAMPLE_DATA` pointer is built whole at its first byte and served from that copy (§6.3).
 
----
+***
 
 ## 4. Register map
 
@@ -104,14 +105,14 @@ Allocation follows a fixed policy. A flat cell is granted only to live single-by
 | `0x09` | `DRIVER_NAME_LEN` | RO | 1 | Valid length of the driver name (served via the driver view, `DRIVER_SELECT`) |
 | `0x0A` | `STORE_COUNT` | RO | 1 | Populated personality-store slots |
 | `0x0B` | `ACTIVE_SLOT` | RO | 1 | Store slot the running personality came from; `0xFF` = transient (RAM upload) |
-| `0x0C` | `RUNNER_STATE` | RO | 1 | 0 NO_DRIVER, 1 LOADING, 2 PROBING, 3 MEASURING, 5 PROBE_FAILED |
+| `0x0C` | `RUNNER_STATE` | RO | 1 | 0 NO\_DRIVER, 1 LOADING, 2 PROBING, 3 MEASURING, 5 PROBE\_FAILED |
 | `0x0D` | `PROBE_RETRIES` | RO | 1 | Current probe retry counter |
 | `0x0E` | `DECIMATION` | RW | 2 | Device-output decimation gate: `0` = output off, `1` = every sample, `N` = every Nth. Live on write; committed to NVS by `STORE_PERSIST` (§5), like all savable config |
 | `0x10` | `CMD` | WO | 1 | Command opcode (§5); bit 7 is the optional doorbell |
 | `0x11` | `PROGRAM_SIZE` | RW | 2 | Total size of the next upload, an NXS image under `XFER_TYPE` = 0 (§6.1) or a firmware image under 1 (§7.3), little-endian. Writing the high byte opens the session: `CMD_ERROR` reads `CMD_ERR_PENDING`, then `0` (open), `EBUSY` (another session), `EPROTO` (a mode that takes no upload), or `EFBIG` (over the staging buffer) |
 | `0x13` | `PARAM_SELECT` | RW | 1 | Selects which parameter the `0xC0` descriptor block exposes. Under the peek view of a camera personality slot it selects the run parameter `PARAM_SET_VALUE` stages, and the view stays (§6.11) |
 | `0x14` | `PARAM_SET_VALUE` | RW | 4 | New value (u32) for the selected parameter; applies immediately (§6.4). Under the device-parameter view it reads and writes the selected device parameter's setting (§6.3). Under the peek view of a camera personality slot it stages the value for that slot's next `CAM_RUN` instead, and reads back the staged value, else the value the slot's last completed run ended with, else the slot's compiled default (§6.11) |
-| `0x18` | `STORE_SELECT` | RW | 1 | Slot index for `SAVE` / `DELETE_SLOT` / `PEEK_SLOT` and the slot `CAM_RUN` runs. Under `XFER_TYPE` = 4 (CALIB) and 5 (BUILD_INFO) it is the read-back page; under 6 and 7 (PERSONALITY_INFO and its second bank) it is `slot << 5 \| page` (§6.11) |
+| `0x18` | `STORE_SELECT` | RW | 1 | Slot index for `SAVE` / `DELETE_SLOT` / `PEEK_SLOT` and the slot `CAM_RUN` runs. Under `XFER_TYPE` = 4 (CALIB) and 5 (BUILD\_INFO) it is the read-back page; under 6 and 7 (PERSONALITY\_INFO and its second bank) it is `slot << 5 \| page` (§6.11) |
 | `0x19` | `PROTO_VERSION` | RO | 1 | Register-map contract version (= 1; §2) |
 | `0x1A` | `XFER_TYPE` | RW | 1 | `PROGRAM_DATA` consumer: 0 = VM bytecode (default), 1 = DFU firmware image, 2 = identity-config record (§6.7), 3 = time-sync record (§6.8), 4 = calibration record (§6.9), 5 = build identity (§6.10), 6 = personality info, the read-only descriptor trailer of a stored camera personality, and 7 its second page bank (§6.11). A write while another writer's session is open is refused silently (§6.1) |
 | `0x1B` | `XFER_PHASE` | RO | 1 | DFU phase: 0 IDLE, 1 ERASING, 2 READY, 3 WRITING, 4 FINISHING, 5 ERROR. While a calibration procedure runs it carries the `CalState` (§6.9); while a camera run holds the session it mirrors `CAM_STATE` (§6.11) |
@@ -123,7 +124,7 @@ Allocation follows a fixed policy. A flat cell is granted only to live single-by
 | `0x40` | `SAMPLE_DATA` | RO | 128 | Latest-sample record: `latch_time_us` u64 at +0, `timestamp_us` u64 at +8, `seq` u16 at +16, sample data at +18 for `SAMPLE_SIZE` bytes (all LE, §6.3; data capped at 110 bytes). A 2-byte cursor written after the register pointer, in the transaction that then reads, serves a burst of queued records instead (§6.3) |
 | `0xC0` | `SEL_NAME_LEN` | RO | 1 | Selected-descriptor window (§6.4, §6.6): name length, any view |
 | `0xC1` | `SEL_NAME` | RO | 16 | Descriptor name, ASCII, any view (personality view: the loaded personality's name) |
-| `0xD1` | `SEL_TYPE` | RO | 1 | Param view: bits[3:0] = 0 enumerated value set / 1 range; bit[4] = kind (0 = reload, 1 = live, §6.4). Output view: field type code (§6.6). Peek view: the slot's kind, 0 driver / 1 camera (§6.5) |
+| `0xD1` | `SEL_TYPE` | RO | 1 | Param view: bits\[3:0] = 0 enumerated value set / 1 range; bit\[4] = kind (0 = reload, 1 = live, §6.4). Output view: field type code (§6.6). Peek view: the slot's kind, 0 driver / 1 camera (§6.5) |
 | `0xD2` | `SEL_PARAM_DEFAULT` | RO | 4 | Param view: default value (u32) |
 | `0xD3` | `SEL_DRIVER_NUM_PARAMS` | RO | 1 | Driver/peek view: declared parameter count |
 | `0xD4` | `SEL_DRIVER_NUM_OUTPUTS` | RO | 1 | Driver/peek view: declared output count |
@@ -145,8 +146,8 @@ Allocation follows a fixed policy. A flat cell is granted only to live single-by
 | `0xEA` | `DECIMATION_SELECT` | RW | 1 | Per-subject decimation selector: a SubjectBucket value. Deferred echo — poll until it reads back; out-of-range echoes `0xFF`. Selecting repaints `DECIMATION_VALUE` |
 | `0xEB` | `DECIMATION_VALUE` | RW | 2 | The selected subject's decimation factor (u16 LE, one-transaction write) — the register mirror of `aliensense.nxs.decimation.<subject>`. Volatile until the config Save persists the live factors |
 | `0xED` | `CAN_TERM` | RW | 1 | CAN split-termination selection: `0` = off (default), `1` = on, `0xFF` = revert to the default. Applies live; persisted by `STORE_PERSIST` / a Cyphal Save. Reads mirror the effective state; an out-of-vocabulary write is ignored |
-| `0xEE` | `CAM_STATE` | RO | 1 | Camera run state (§6.11): 0 IDLE, 1 LOADING, 2 PROBING, 3 CONFIGURING, 4 DONE, 5 PROBE_FAILED, 6 FAULTED, 7 ABORTED; a terminal value stands until the next `CAM_RUN` |
-| `0xEF` | `CAM_ERROR` | RO | 1 | Positive errno of the last camera run's terminal state: 0 after DONE, the fault's errno after PROBE_FAILED or FAULTED (`EIO`, `ETIMEDOUT`, `EILSEQ`, `EPROTO`, `EFAULT`, `EBADF`, `ENOEXEC`, `EFBIG`, `ENOTSUP`; §12 gives each one's meaning), `ECANCELED` after ABORTED |
+| `0xEE` | `CAM_STATE` | RO | 1 | Camera run state (§6.11): 0 IDLE, 1 LOADING, 2 PROBING, 3 CONFIGURING, 4 DONE, 5 PROBE\_FAILED, 6 FAULTED, 7 ABORTED; a terminal value stands until the next `CAM_RUN` |
+| `0xEF` | `CAM_ERROR` | RO | 1 | Positive errno of the last camera run's terminal state: 0 after DONE, the fault's errno after PROBE\_FAILED or FAULTED (`EIO`, `ETIMEDOUT`, `EILSEQ`, `EPROTO`, `EFAULT`, `EBADF`, `ENOEXEC`, `EFBIG`, `ENOTSUP`; §12 gives each one's meaning), `ECANCELED` after ABORTED |
 | `0xF0` | `SERIAL` | RO | 12 | 96-bit factory-programmed unique ID, MSB-first; reads `0` until set. Unique per unit |
 | `0xFC` | `FW_VERSION_MAJOR` | RO | 1 | Running firmware version major — the same value `GetInfo.software_version` serves over Cyphal. Reads `0` on firmware that predates the register |
 | `0xFD` | `FW_VERSION_MINOR` | RO | 1 | Running firmware version minor. `0xFE` is reserved for a future patch byte |
@@ -194,15 +195,15 @@ An upload is a transfer session: from the size announce to `LOAD`, the device re
 2. Announce the image: write the total size to `PROGRAM_SIZE` (u16, one 2-byte write). The announce arms `CMD_ERROR` with `CMD_ERR_PENDING`; poll it out. `0` opens the session. `EBUSY` — a session is live (another upload or a firmware push); `EPROTO` — `XFER_TYPE` is not 0; `EFBIG` — the size exceeds the staging buffer (§11).
 3. Stream the image to `PROGRAM_DATA` in chunks of up to 32 bytes.
 4. Write `CMD = LOAD` and poll `CMD_ERROR` out of `CMD_ERR_PENDING`. `0` means the device validated the NXS header (magic and format version, §10.1) and parsed the image — only then has the upload happened. `ENODATA` — the stage is short of the announce, refused before the parse, so a previously loaded personality stays; `ENOEXEC` — the bytes are not a valid personality image, and the failed parse leaves the device in the no-personality state. `LOAD` ends the session either way and leaves `RUNNER_STATE` as it was: a personality that runs keeps running until step 5 stops it.
-5. Write `CMD = STOP` and poll `RUNNER_STATE` until LOADING: a `LOAD` leaves the state as it was, and until the runner parks, the register carries the verdict of the personality that ran before. Write `CMD = RUN`; poll until MEASURING (or PROBE_FAILED). `ERROR_CODE` names the code the probe raised (for example `WHO_AM_I_MISMATCH`), and an I/O failure leaves it 0 while `VM_IO_ERRORS` counts it.
+5. Write `CMD = STOP` and poll `RUNNER_STATE` until LOADING: a `LOAD` leaves the state as it was, and until the runner parks, the register carries the verdict of the personality that ran before. Write `CMD = RUN`; poll until MEASURING (or PROBE\_FAILED). `ERROR_CODE` names the code the probe raised (for example `WHO_AM_I_MISMATCH`), and an I/O failure leaves it 0 while `VM_IO_ERRORS` counts it.
 
 A session abandoned mid-stream (a crashed host) releases itself after 2 s of holder silence; the partial stage is discarded when the next contender takes over. `XFER_ABORT` releases it immediately.
 
 ### 6.2 Run state
 
-`RUNNER_STATE` is the personality lifecycle: NO_DRIVER → PROBING → MEASURING from a `RUN`, and LOADING while a `STOP` holds a loaded personality parked. A `RUN` or a `CYCLE` is accepted before the device starts the probe, and until then the register still reads the state before the command, the last personality's MEASURING or PROBE_FAILED included; a host that needs the verdict of its own run stops first (§6.1 step 5). A sensor that fails its probe `PROBE_RETRIES` times enters PROBE_FAILED; if other store slots are populated, the device advances to the next slot autonomously. A host that caches anything derived from the loaded personality (sample layout, parameters) must validate the cache against `DESCRIPTOR_EPOCH` (§6.6), which advances on every personality (re)load — including autonomous slot changes.
+`RUNNER_STATE` is the personality lifecycle: NO\_DRIVER → PROBING → MEASURING from a `RUN`, and LOADING while a `STOP` holds a loaded personality parked. A `RUN` or a `CYCLE` is accepted before the device starts the probe, and until then the register still reads the state before the command, the last personality's MEASURING or PROBE\_FAILED included; a host that needs the verdict of its own run stops first (§6.1 step 5). A sensor that fails its probe `PROBE_RETRIES` times enters PROBE\_FAILED; if other store slots are populated, the device advances to the next slot autonomously. A host that caches anything derived from the loaded personality (sample layout, parameters) must validate the cache against `DESCRIPTOR_EPOCH` (§6.6), which advances on every personality (re)load — including autonomous slot changes.
 
-On every entry into PROBING the device cold-resets the sensor before reading WHO_AM_I: it pulses the shared mikroBUS reset line — assert, hold, release, settle — so every bind, including an autonomous slot advance, probes a freshly-reset part. Reset polarity is per-personality. A personality for an active-high-reset part exposes a `reset_active` parameter (enum; `1` active-high, `0` active-low; RAM-backed, reverts to its compiled default on reset) that the device reads at bind to drive the correct physical level; its absence selects the active-low default. The parameter is discoverable through the normal parameter path (§6.4); it reflects the part's fixed datasheet polarity rather than a per-deployment override.
+On every entry into PROBING the device cold-resets the sensor before reading WHO\_AM\_I: it pulses the shared mikroBUS reset line — assert, hold, release, settle — so every bind, including an autonomous slot advance, probes a freshly-reset part. Reset polarity is per-personality. A personality for an active-high-reset part exposes a `reset_active` parameter (enum; `1` active-high, `0` active-low; RAM-backed, reverts to its compiled default on reset) that the device reads at bind to drive the correct physical level; its absence selects the active-low default. The parameter is discoverable through the normal parameter path (§6.4); it reflects the part's fixed datasheet polarity rather than a per-deployment override.
 
 ### 6.3 Sample readout
 
@@ -254,8 +255,8 @@ Read: write the parameter index to `PARAM_SELECT`, then read the descriptor wind
 
 Write: select the index, then write the new value as u32 to `PARAM_SET_VALUE`. Values outside the allowed set — or, for a range parameter, outside `[min, max]` — are rejected silently; the window read-back shows the value still in force. How an accepted value is applied depends on the kind:
 
-- **reload** — the device rewrites the personality's bytecode in place and reloads the VM (re-running probe + configure). The parameter takes effect without a host-visible restart.
-- **live** — the device updates the value in place; a runtime consumer re-reads it on its next cycle. The VM is **not** reloaded, so sampling continues uninterrupted.
+* **reload** — the device rewrites the personality's bytecode in place and reloads the VM (re-running probe + configure). The parameter takes effect without a host-visible restart.
+* **live** — the device updates the value in place; a runtime consumer re-reads it on its next cycle. The VM is **not** reloaded, so sampling continues uninterrupted.
 
 Range parameters are always **live** — they carry no bytecode rewrite site, so a reload range would only fire a useless reload on every set. The device enforces the parameter contract at `LOAD`: an image is rejected (`ENOEXEC` in `CMD_ERROR`, the staged image left unchanged) if it declares a reload range, a range with other than two `[min, max]` bounds, a `default`/`current` outside those bounds, or an unrecognized parameter type. A host that uploads a well-formed image never sees these. The PWM helper auto-declares two live range parameters — `pwm_freq` ∈ `[500, 25000]` Hz and `pwm_duty` ∈ `[0, 100]` % — that a host retunes at runtime via `PARAM_SET_VALUE` to drive the mikroBUS PWM pin.
 
@@ -263,7 +264,7 @@ Some parameters are injected by the compiler from a personality's hardware decla
 
 ### 6.5 Personality store
 
-The store persists up to 8 personality images in flash. `SAVE` writes the *staged* image (the most recent upload) to the selected slot; the result is reported in `CMD_ERROR` (§12) — 0 on success, else a positive errno (no personality staged, a duplicate already stored, or the store is full). A store command (`SAVE`, `DELETE_SLOT`, `CLEAR_STORE`, `PEEK_SLOT`) issued while a transfer session is live — an upload or a firmware push — is refused with `EBUSY`: persisting a half-streamed stage would surface as a corrupt slot at some later boot, and a store landing mid-firmware-push would overwrite the push's latched error detail. A stale session's partial stage is discarded rather than saved. The store keeps its slots packed: `SAVE` to a populated slot overwrites it in place, `SAVE` to any other slot appends after the last populated one, and `DELETE_SLOT` moves every later image down one slot. A host that replaces an image saves over its slot; a delete first would move the next image onto the slot it then saves to. On boot the device auto-loads the first populated slot. `STORE_COUNT`, `ACTIVE_SLOT`, and `CYCLE` (§5) manage rotation; PROBE_FAILED auto-advance (§6.2) makes a multi-sensor store self-selecting: the device settles on the first personality whose sensor answers.
+The store persists up to 8 personality images in flash. `SAVE` writes the *staged* image (the most recent upload) to the selected slot; the result is reported in `CMD_ERROR` (§12) — 0 on success, else a positive errno (no personality staged, a duplicate already stored, or the store is full). A store command (`SAVE`, `DELETE_SLOT`, `CLEAR_STORE`, `PEEK_SLOT`) issued while a transfer session is live — an upload or a firmware push — is refused with `EBUSY`: persisting a half-streamed stage would surface as a corrupt slot at some later boot, and a store landing mid-firmware-push would overwrite the push's latched error detail. A stale session's partial stage is discarded rather than saved. The store keeps its slots packed: `SAVE` to a populated slot overwrites it in place, `SAVE` to any other slot appends after the last populated one, and `DELETE_SLOT` moves every later image down one slot. A host that replaces an image saves over its slot; a delete first would move the next image onto the slot it then saves to. On boot the device auto-loads the first populated slot. `STORE_COUNT`, `ACTIVE_SLOT`, and `CYCLE` (§5) manage rotation; PROBE\_FAILED auto-advance (§6.2) makes a multi-sensor store self-selecting: the device settles on the first personality whose sensor answers.
 
 ### 6.6 Output descriptors
 
@@ -289,23 +290,23 @@ Semantic category codes (0 when no category applies; codes are append-only):
 
 | Code | Semantic | Code | Semantic |
 |---|---|---|---|
-| 0 | generic | 7 | mag_x |
-| 1 | accel_x | 8 | mag_y |
-| 2 | accel_y | 9 | mag_z |
-| 3 | accel_z | 10 | temperature |
-| 4 | gyro_x | 11 | pressure |
-| 5 | gyro_y | 12 | humidity |
-| 6 | gyro_z | 13 | nmea |
+| 0 | generic | 7 | mag\_x |
+| 1 | accel\_x | 8 | mag\_y |
+| 2 | accel\_y | 9 | mag\_z |
+| 3 | accel\_z | 10 | temperature |
+| 4 | gyro\_x | 11 | pressure |
+| 5 | gyro\_y | 12 | humidity |
+| 6 | gyro\_z | 13 | nmea |
 
 Geodetic semantic codes (the structured-GNSS group, projected onto the standard `reg.udral…geodetic.PointStateVarTs` subject):
 
 | Code | Semantic | Code | Semantic |
 |---|---|---|---|
-| 14 | latitude | 19 | vel_down |
-| 15 | longitude | 20 | pos_h_acc |
-| 16 | altitude | 21 | pos_v_acc |
-| 17 | vel_north | 22 | vel_s_acc |
-| 18 | vel_east | | |
+| 14 | latitude | 19 | vel\_down |
+| 15 | longitude | 20 | pos\_h\_acc |
+| 16 | altitude | 21 | pos\_v\_acc |
+| 17 | vel\_north | 22 | vel\_s\_acc |
+| 18 | vel\_east | | |
 
 Scalar SI semantic codes (each projected onto the matching `uavcan.si.sample.<quantity>.Scalar` subject, §8.2.8):
 
@@ -322,7 +323,7 @@ GNSS epoch semantic codes (no standard-subject projection; they identify a recei
 
 | Code | Semantic | Code | Semantic |
 |---|---|---|---|
-| 34 | time_of_week | 35 | fix_type |
+| 34 | time\_of\_week | 35 | fix\_type |
 
 Descriptor reads race the device's autonomous personality changes (§6.2), so a host validates a descriptor set with `DESCRIPTOR_EPOCH`:
 
@@ -350,21 +351,21 @@ Identity is fixed when the Cyphal node is constructed, so steps 1–4 persist th
 
 All device timestamps — `timestamp_us` in the sample record (§6.3), in `RawSample` (§8.2), and in the SI subjects (§8.2.8) — are one monotonic µs clock counting from device boot. The device additionally serves that clock's *current* value on every wire, so a host can measure the device→host clock offset with a bounded error and translate acquisition timestamps into its own time domain:
 
-- **I²C**: `latch_time_us` in the sample record is stamped when the read transaction latches the window — the host's clock readings immediately before and after that transaction bracket it, so every sample poll doubles as one sync observation.
-- **Cyphal (serial and CAN)**: the read-only `aliensense.nxs.time_us` register (natural64, §8.2.7) returns the clock at request service time; the host brackets the `register.Access` round trip.
+* **I²C**: `latch_time_us` in the sample record is stamped when the read transaction latches the window — the host's clock readings immediately before and after that transaction bracket it, so every sample poll doubles as one sync observation.
+* **Cyphal (serial and CAN)**: the read-only `aliensense.nxs.time_us` register (natural64, §8.2.7) returns the clock at request service time; the host brackets the `register.Access` round trip.
 
 The estimation recipe is the standard two-way method (RFC 5905): for each exchange with host clock readings `t0`/`t1` around a device reading `d`, the host−device offset candidate is `(t0 + t1)/2 − d` with error bounded by `(t1 − t0)/2`; keep the minimum-round-trip exchange over a sliding window (~30 s) and fit drift across the window (the device clock is oscillator-driven, tens of ppm). Repeating an exchange at ~1 Hz holds the projection error near the per-wire floor: ~100 µs on I²C (the host masters a ~200 µs transaction), a few hundred µs on CAN-FD, and 1–2 ms on serial (the exchange shares a half-duplex link with the sample stream). `nxs ros2 --stamp synced` implements exactly this; the surfaces are standard reads, so any host can.
 
 The host can additionally push its estimate down, giving the device a synced timescale — mesh time — beside its untouched local clock. The push is volatile and expires: each record carries its own validity window, the discipline decays that long after the push applies, and every consumer falls back to local behavior. The window is the pusher's receipt timeout expressed as a duration — the `nxs` tools push ten times their refresh cadence, so ten consecutive lost pushes end the discipline. A zero window is malformed and the device rejects the record.
 
-- **I²C**: write `XFER_TYPE = 3` and read it back — a live transfer session (a personality upload or firmware push) refuses the write silently, and a periodic pusher skips the cycle rather than streaming into the wrong sink — then stream the 20-byte record — offset (i64 LE, µs), bound (u32 LE, µs), rate (i32 LE, parts per billion), then validity window (u32 LE, µs) — into `PROGRAM_DATA`. The record applies as its last byte lands and the window re-arms for the next push. A read of the window in this mode serves the live state: offset, bound, rate, validity window, a source byte (0 none or stale, 1 host), and a validity byte.
-- **Cyphal**: write `aliensense.nxs.time_sync` (`integer64[4]` — offset µs, bound µs, rate ppb, validity window µs) in one `register.Access`; a read serves `integer64[5]` — offset, bound, rate, validity window, source.
+* **I²C**: write `XFER_TYPE = 3` and read it back — a live transfer session (a personality upload or firmware push) refuses the write silently, and a periodic pusher skips the cycle rather than streaming into the wrong sink — then stream the 20-byte record — offset (i64 LE, µs), bound (u32 LE, µs), rate (i32 LE, parts per billion), then validity window (u32 LE, µs) — into `PROGRAM_DATA`. The record applies as its last byte lands and the window re-arms for the next push. A read of the window in this mode serves the live state: offset, bound, rate, validity window, a source byte (0 none or stale, 1 host), and a validity byte.
+* **Cyphal**: write `aliensense.nxs.time_sync` (`integer64[4]` — offset µs, bound µs, rate ppb, validity window µs) in one `register.Access`; a read serves `integer64[5]` — offset, bound, rate, validity window, source.
 
 While a discipline is fresh, the SI subjects' `SynchronizedTimestamp` fields carry mesh time (the local clock mapped through the pushed offset and rate); undisciplined, they carry the local clock. `RawSample.timestamp_us` and the sample record stay the local clock always. The rate term extrapolates the estimator's fitted clock skew between pushes, so the mesh error no longer grows at the oscillator differential over the push interval. While a discipline stays valid, mesh time is continuous and monotonic across pushes: a correction of 1 ms or less is absorbed by slewing at 500 ppm, never by stepping. The first discipline, a re-acquire after staleness, and a correction beyond 1 ms apply as a step. The status LED renders its pattern from the synced second while disciplined, so synced units blink in phase. `nxs switch` seeds the discipline at converge, and a resident pusher — the bare `nxs timesync`, an addressed `nxs --unit <name> timesync`, or the ROS 2 bridge — keeps it fresh.
 
 ### 6.9 Calibration
 
-The device stores one per-unit calibration record: an affine correction `v_out = M·v + b` (M 3×3 row-major, b 3×1) per vector bucket — acceleration, angular velocity, magnetic field — a mounting-orientation code, and a scalar encoder zero-offset added to the `angle` output, the sum wrapped into [0, 2π). The correction applies in the SI tier only: the `uavcan.si.sample.*` subjects (§8.2.8) carry calibrated values, while the `RawSample` stream and the I²C sample window (§6.3) carry raw counts. A host that applies the served record to its own raw decode reproduces the SI subjects exactly.
+The device stores one per-unit calibration record: an affine correction `v_out = M·v + b` (M 3×3 row-major, b 3×1) per vector bucket — acceleration, angular velocity, magnetic field — a mounting-orientation code, and a scalar encoder zero-offset added to the `angle` output, the sum wrapped into \[0, 2π). The correction applies in the SI tier only: the `uavcan.si.sample.*` subjects (§8.2.8) carry calibrated values, while the `RawSample` stream and the I²C sample window (§6.3) carry raw counts. A host that applies the served record to its own raw decode reproduces the SI subjects exactly.
 
 The orientation code composes a mount rotation on top of each bucket's affine (effective affine = R·M, R·b): one of the 24 axis-aligned proper rotations, named by their composition R = Rz(yaw)·Ry(pitch)·Rx(roll) with each angle in {0, 90, 180, 270} — `NONE` (0), `YAW_90` (1), … `ROLL_270_YAW_270` (23). The code names the board's physical mounting rotation relative to the vehicle frame; the device applies that same rotation to measured vectors, so a board mounted with the named rotation reports vehicle-frame values. Verification anchor: a level board with `ROLL_90` set reads gravity on −Y; the physically rolled board (+Y up) reads +Z.
 
@@ -376,11 +377,11 @@ Each solved bucket carries a personality tag — the FNV-1a 32-bit hash of the p
 |---|---|---|---|
 | 0 | `version` | u8 | record-layout version, 1. A persisted record whose version or size mismatches the firmware's layout is discarded at boot in favour of identity defaults |
 | 1 | `orientation` | u8 | rotation code 0–23 |
-| 2 | `reserved` | u8[2] | 0 |
-| 4 | `m` | f32[3][9] | per-bucket M, row-major; buckets in order acceleration, angular velocity, magnetic field |
-| 112 | `b` | f32[3][3] | per-bucket b, same order |
-| 148 | `encoder_zero` | f32 | radians added to the `angle` output, the sum wrapped into [0, 2π) |
-| 152 | `driver_tag` | u32[3] | per-bucket personality guard, 0 = unguarded |
+| 2 | `reserved` | u8\[2] | 0 |
+| 4 | `m` | f32\[3]\[9] | per-bucket M, row-major; buckets in order acceleration, angular velocity, magnetic field |
+| 112 | `b` | f32\[3]\[3] | per-bucket b, same order |
+| 148 | `encoder_zero` | f32 | radians added to the `angle` output, the sum wrapped into \[0, 2π) |
+| 152 | `driver_tag` | u32\[3] | per-bucket personality guard, 0 = unguarded |
 | 164 | `encoder_tag` | u32 | encoder-zero personality guard |
 
 **Record write.** The record travels through the `PROGRAM_DATA` window under a calibration transfer mode, mirroring the identity flow (§6.7):
@@ -400,8 +401,8 @@ Over Cyphal the same two phases are the calibration registers and `aliensense.nx
 
 **On-device procedures.** Two solves run on the device itself, so a Cyphal autopilot or any I²C master drives them with no host tool. They report on the same registers the DFU path uses, and the device refuses the overlap: a procedure start while an update or upload session is live answers `EBUSY`, on either transport, as does starting an update while a host-commanded procedure runs. The boot-automatic gyro pass, which arms on the runner's first `MEASURING`, is the exception: it is the device's own housekeeping, so any host claim — a personality upload, a store command, `DFU_BEGIN`, `BEGIN_SOFTWARE_UPDATE` — stops it and takes the session, keeping the previous boot's bias. A calibration start that joins that pass makes it the host's, and it then refuses like any other host-commanded procedure. `XFER_PHASE` carries the state (0 idle, 1 gyro-wait-still, 2 gyro-averaging, 3 mag-collect), `XFER_ACK` the detail (gyro percent averaged, or mag rotation coverage of 14, of which 12 is the stopping point at which a host asks the solve — the answer can still be `EAGAIN`), and `CMD_ERROR` the completion verdict. A procedure has finished when `XFER_PHASE` returns to idle. Read the verdict in the same poll that observes the idle phase. `CMD_ERROR` is shared with the store and DFU results, and the next command op replaces it; leaving DFU mode with an `XFER_TYPE` write resets `XFER_PHASE` and `XFER_ACK` only.
 
-- **Gyro still-average** (`CAL_GYRO`). The device waits for stillness (a per-axis peak-to-peak gate), averages 400 samples, and writes `b = −mean` into the running record. The command result is acceptance only. The completion verdict lands in `CMD_ERROR` on the idle edge: it reads 0 while the average runs, then the errno when `XFER_PHASE` returns to idle. A commanded run times out after 60 s. The same procedure also runs once automatically at boot, on the runner's first `MEASURING` — it completes on a still boot and gives up with `ETIMEDOUT` after ~15 s of motion, leaving the stored bias untouched.
-- **Mag in-situ ellipsoid** (`CAL_MAG_START` / `CAL_MAG_STOP`). `CAL_MAG_START` begins collection: the vehicle is rotated through all attitudes while the device accumulates float64 normal-equation sums, and no sample cloud is stored. `CAL_MAG_STOP` coverage-gates, solves, self-checks, and applies. Its `CMD_ERROR` is the fit verdict — 0 = applied; `EAGAIN` = insufficient coverage; `ERANGE` = degenerate, non-ellipsoid fit; `EBADMSG` = failed the sphere self-check (the calibrated |B|² spread over the accumulated cloud exceeds the gate). Every failure keeps the previous calibration. `EAGAIN` alone leaves the collection open and restarts its give-up window, so a host that reaches the progress byte's stopping point and is told "not yet" keeps rotating and stops again rather than starting over (a stop after the window finally expires answers `EINVAL` — no collection open) — coverage is only decided once the fit has divided the mount's own distortion out, so the progress byte is an estimate. `Cmd::XFER_ABORT` drops a procedure without solving, for a host that wants to cancel rather than commit; over Cyphal the same release is `CAL_ABORT` (0xA00D). The solve preserves the RMS field radius, and the procedure runs mounted in the vehicle — the iron the fit removes belongs to the installation, not the module.
+* **Gyro still-average** (`CAL_GYRO`). The device waits for stillness (a per-axis peak-to-peak gate), averages 400 samples, and writes `b = −mean` into the running record. The command result is acceptance only. The completion verdict lands in `CMD_ERROR` on the idle edge: it reads 0 while the average runs, then the errno when `XFER_PHASE` returns to idle. A commanded run times out after 60 s. The same procedure also runs once automatically at boot, on the runner's first `MEASURING` — it completes on a still boot and gives up with `ETIMEDOUT` after ~15 s of motion, leaving the stored bias untouched.
+* **Mag in-situ ellipsoid** (`CAL_MAG_START` / `CAL_MAG_STOP`). `CAL_MAG_START` begins collection: the vehicle is rotated through all attitudes while the device accumulates float64 normal-equation sums, and no sample cloud is stored. `CAL_MAG_STOP` coverage-gates, solves, self-checks, and applies. Its `CMD_ERROR` is the fit verdict — 0 = applied; `EAGAIN` = insufficient coverage; `ERANGE` = degenerate, non-ellipsoid fit; `EBADMSG` = failed the sphere self-check (the calibrated |B|² spread over the accumulated cloud exceeds the gate). Every failure keeps the previous calibration. `EAGAIN` alone leaves the collection open and restarts its give-up window, so a host that reaches the progress byte's stopping point and is told "not yet" keeps rotating and stops again rather than starting over (a stop after the window finally expires answers `EINVAL` — no collection open) — coverage is only decided once the fit has divided the mount's own distortion out, so the progress byte is an estimate. `Cmd::XFER_ABORT` drops a procedure without solving, for a host that wants to cancel rather than commit; over Cyphal the same release is `CAL_ABORT` (0xA00D). The solve preserves the RMS field radius, and the procedure runs mounted in the vehicle — the iron the fit removes belongs to the installation, not the module.
 
 Accelerometer calibration is a host-side procedure: a gravity-magnitude fit (per-axis scale and offset) over six poses, checked against two held-out poses, solved by the `nxs` tool and uploaded through the ordinary record write (Integration Manual §4.9). There is no dedicated reset command. Writing the identity record with the orientation field kept, then persisting it, is the reset, and `nxs calibrate reset` performs exactly that.
 
@@ -423,7 +424,7 @@ Run:
 
 1. Stage the run's parameters: `STORE_SELECT` = slot, `CMD` = `PEEK_SLOT`, then per parameter `PARAM_SELECT` = its index and `PARAM_SET_VALUE` = the value (u32). The stored image never changes: the values are applied to the run's program copy and consumed by the run. The parameter indices and the value of each mode and trigger conversion come from the personality's descriptor trailer (below), never from parameter names, which the peek view does not serve. A stage holds one value per parameter, survives a refused run, and is dropped when another slot is peeked. A run starts with every parameter at its staged value or its compiled default, and its program may store a parameter, which is how a personality reports the value it achieved for a requested one. After a run reaches DONE, `PARAM_SET_VALUE` under the slot's peek view serves those ending values until the next run of any slot starts.
 2. Write the slot to `STORE_SELECT` and `CMD` = `CAM_RUN`; poll `CMD_ERROR` for acceptance (§5). The device accepts the command before it takes the bus, but the acceptance is usually only readable once the run has ended (step 4): poll it against the run's own budget, not the store-command timeout. A run that ends before the host reads the acceptance leaves its verdict in `CMD_ERROR`, and a refused command paints no state. Read the `CAM_RUNS` counter of the diag view (§12.1) before the command: a nonzero `CMD_ERROR` is the run's verdict when `CAM_RUNS` has advanced by one (the run was accepted and `CAM_STATE` reached a terminal state whose `CAM_ERROR` is the same errno), and the command's refusal otherwise. On firmware that predates `CAM_RUNS` the count never advances, and a terminal state that differs from the one read before the command is the verdict instead; a run that ends the way the previous one did then reads as the refusal.
-3. After the hold-off in step 4, poll `CAM_STATE`: LOADING, PROBING while the program counter sits inside the image's probe program (the alive or identity check, §10.1), CONFIGURING from its end, then a terminal DONE, PROBE_FAILED, FAULTED, or ABORTED. A failed run is named by the phase its own instruction belongs to, so a probe that writes before it reads and a configure whose first write fails are each reported correctly. A terminal state is re-asserted while the device idles, so a host that polls late still reads it. `CAM_ERROR` carries the terminal errno; while the run holds the session `XFER_PHASE` mirrors the state and `XFER_ACK` the program counter's low byte, and the verdict lands in `CMD_ERROR` on the terminal edge, in the poll that first observes it (§6.9).
+3. After the hold-off in step 4, poll `CAM_STATE`: LOADING, PROBING while the program counter sits inside the image's probe program (the alive or identity check, §10.1), CONFIGURING from its end, then a terminal DONE, PROBE\_FAILED, FAULTED, or ABORTED. A failed run is named by the phase its own instruction belongs to, so a probe that writes before it reads and a configure whose first write fails are each reported correctly. A terminal state is re-asserted while the device idles, so a host that polls late still reads it. `CAM_ERROR` carries the terminal errno; while the run holds the session `XFER_PHASE` mirrors the state and `XFER_ACK` the program counter's low byte, and the verdict lands in `CMD_ERROR` on the terminal edge, in the poll that first observes it (§6.9).
 4. Between the accepted `CAM_RUN` and the terminal edge the device is the bus master, and **the host addresses nothing on that bus** — not the sensor, and not the device's own register map. The register map and the sensor share one I²C peripheral on one segment, so the map answers only between the run's own transactions: a host transaction that lands inside one is a second master, it fails the transfer the device was making, and the run retries that transfer and re-registers its target, at the retry ladder's cost in time. The host therefore holds off for the run and reads afterwards: `CAM_STATE` holds a terminal value until the next `CAM_RUN`, so nothing is missed by waiting, and `CMD_ERROR` holds the run's verdict from the terminal edge on: the errno `CAM_ERROR` carries, 0 for DONE. A refused command held the bus for no run, and its refusal stays in `CMD_ERROR` (step 2).
 
    How long to hold off is the caller's estimate of the program plus margin — `nxs` uses two seconds — after which the poll costs nothing, because the bus is free once the run ends.
@@ -490,8 +491,8 @@ Any of the following fails the pull. On failure the sink is aborted (the staged 
 
 The completion action is fixed by which trigger started the pull:
 
-- **Firmware** (`BEGIN_SOFTWARE_UPDATE`): end-of-file checks that the staged bytes are a complete MCUboot image, arms the MCUboot swap (the staged image becomes swap-pending) and the device reboots into §7.1's probationary TEST flow. The reboot arrives seconds after the ExecuteCommand reply has drained, so it is not observable as a failed command. A file that is not an MCUboot image (a raw `zephyr.bin`) resolves `aliensense.nxs.cmd_error` to `ENOEXEC` (8) and one that ends before the length its header declares to `ENODATA` (61); neither reboots.
-- **Personality** (`LOAD_FROM_FILE`): end-of-file loads the assembled NXS personality — the personality structure is activated but **not** started, and the device does not reboot. Starting it is a separate `RUN` (`0xA001`) command (§6), mirroring the upload-then-run split of the I²C personality path.
+* **Firmware** (`BEGIN_SOFTWARE_UPDATE`): end-of-file checks that the staged bytes are a complete MCUboot image, arms the MCUboot swap (the staged image becomes swap-pending) and the device reboots into §7.1's probationary TEST flow. The reboot arrives seconds after the ExecuteCommand reply has drained, so it is not observable as a failed command. A file that is not an MCUboot image (a raw `zephyr.bin`) resolves `aliensense.nxs.cmd_error` to `ENOEXEC` (8) and one that ends before the length its header declares to `ENODATA` (61); neither reboots.
+* **Personality** (`LOAD_FROM_FILE`): end-of-file loads the assembled NXS personality — the personality structure is activated but **not** started, and the device does not reboot. Starting it is a separate `RUN` (`0xA001`) command (§6), mirroring the upload-then-run split of the I²C personality path.
 
 #### One pull at a time
 
@@ -600,7 +601,7 @@ The header is a 22-byte little-endian field block followed by a 2-byte CRC-16/CC
 
 **Header CRC.** CRC-16/CCITT-FALSE: polynomial `0x1021`, initial value `0xFFFF`, non-reflected input and output, final XOR `0x0000`. Computed over header bytes 0–21 and appended big-endian. The receiver validates by computing the same CRC-16 over all 24 bytes (struct + appended CRC) and requiring the residue to equal `0`; a nonzero residue drops the frame.
 
-#### 8.2.3 data_specifier bit layout
+#### 8.2.3 data\_specifier bit layout
 
 The 16-bit `data_specifier` encodes the transfer role and the port-ID.
 
@@ -638,7 +639,7 @@ A frame failing any check below is dropped silently. There is no NAK and no erro
 | Version mismatch | Byte 0 ≠ `0x01`. |
 | Bad header CRC | CRC-16/CCITT-FALSE residue over the 24-byte header ≠ `0`. |
 | Multi-frame | `frame_index_eot` ≠ `0x80000000` (EOT clear or frame index nonzero). |
-| Nonzero user_data | Bytes 20–21 ≠ `0x0000`. |
+| Nonzero user\_data | Bytes 20–21 ≠ `0x0000`. |
 | Bad transfer CRC | CRC-32C over the payload ≠ the appended little-endian value. |
 | Misaddressed service | Service transfer whose `destination_node_id` is not this node's ID. |
 | Out-of-range source | Non-anonymous `source_node_id` > `127` (would alias the 7-bit `CanardNodeID`). |
@@ -690,7 +691,7 @@ The `transfer_id` header field is 64-bit, but only its low 8 bits are taken into
 | `uavcan.diagnostic.severity` | read/write | `natural16`; capture floor for the diagnostic stream on subject 8184 — `0` TRACE … `7` ALERT, default `4` (WARNING). Out-of-range writes clamp to `7`. RAM-only |
 | `aliensense.nxs.param.<name>` | read/write | `natural32`; one register per loaded-personality parameter — write sets the value, read returns the current. `register.List` enumerates them after the static registers; the descriptor (unit, allowed set) comes from GetParamInfo. RAM-only |
 | `aliensense.nxs.calibration.acceleration` / `.angular_velocity` / `.magnetic_field` | read/write, persistent | `real32[12]`; the bucket's affine — M row-major (elements 0–8) then b (9–11). A write stages; `calibration.commit` applies the staged record and Save persists it (§6.9) |
-| `aliensense.nxs.calibration.encoder_zero` | read/write, persistent | `real32[1]`; radians added to the `angle` output, the sum wrapped into [0, 2π) |
+| `aliensense.nxs.calibration.encoder_zero` | read/write, persistent | `real32[1]`; radians added to the `angle` output, the sum wrapped into \[0, 2π) |
 | `aliensense.nxs.calibration.commit` | read/write, volatile | `natural8[1]`; writing a nonzero value validates the staged record and applies it to the running state in one step; writing `0` discards the staged edit (the stage re-seeds from the running record). The response carries the **result code**, not the written value — `Access` reads after the write regardless of its outcome, so a single round trip reports acceptance (`0`) or the errno. A commit refused `ECANCELED` discards the stage; other refusals keep it |
 | `aliensense.nxs.calibration.dirty` | read-only, volatile | `natural8[1]`; `1` while the staged record differs from the running one |
 | `aliensense.nxs.calibration.orientation` | read/write, persistent | `natural8[1]`; mounting-rotation code 0–23 (§6.9) |
@@ -759,9 +760,9 @@ The firmware walks the active personality's output descriptors, decodes each num
 
 | Source semantic(s) | Subject-ID (default) | Cyphal DSDL type | Notes / slots |
 |---|---|---|---|
-| `accel_x` / `accel_y` / `accel_z` (1–3) | 6146 | `uavcan.si.sample.acceleration.Vector3.1.0` | `float32[3] meter_per_second_per_second`; X→[0], Y→[1], Z→[2] |
-| `gyro_x` / `gyro_y` / `gyro_z` (4–6) | 6147 | `uavcan.si.sample.angular_velocity.Vector3.1.0` | `float32[3] radian_per_second`; X→[0], Y→[1], Z→[2] |
-| `mag_x` / `mag_y` / `mag_z` (7–9) | 6151 | `uavcan.si.sample.magnetic_field_strength.Vector3.1.0` | `float32[3] tesla`; X→[0], Y→[1], Z→[2] |
+| `accel_x` / `accel_y` / `accel_z` (1–3) | 6146 | `uavcan.si.sample.acceleration.Vector3.1.0` | `float32[3] meter_per_second_per_second`; X→\[0], Y→\[1], Z→\[2] |
+| `gyro_x` / `gyro_y` / `gyro_z` (4–6) | 6147 | `uavcan.si.sample.angular_velocity.Vector3.1.0` | `float32[3] radian_per_second`; X→\[0], Y→\[1], Z→\[2] |
+| `mag_x` / `mag_y` / `mag_z` (7–9) | 6151 | `uavcan.si.sample.magnetic_field_strength.Vector3.1.0` | `float32[3] tesla`; X→\[0], Y→\[1], Z→\[2] |
 | `temperature` (10) | 6148 | `uavcan.si.sample.temperature.Scalar.1.0` | `float32 kelvin`; kelvin at the source, published unchanged |
 | `pressure` (11) | 6149 | `uavcan.si.sample.pressure.Scalar.1.0` | `float32 pascal` |
 | scalar block `angle` (23) … `flow` (33) | `base + k`, base 6152 | `uavcan.si.sample.<quantity>.Scalar.1.0` | one `float32` per quantity; see the scalar-block rule below |
@@ -775,10 +776,10 @@ These are the **default** subject-IDs (vendor-fixed band); each is a `uavcan.pub
 
 **Geodetic (GNSS).** `PointStateVarTs` is published only when the sample carries the complete position triple — `latitude`, `longitude`, and `altitude` all present. A sample missing any of the three is suppressed entirely (rather than transmitting zeros that a consumer would read as a real position). Fix quality is not gated on-device: it rides in the covariance and in the personality's generic quality fields (fix type, satellite count). When published:
 
-- Position latitude and longitude are radians as `float64`; altitude is metres as `float64` (`uavcan.si.unit.length.WideScalar.1.0 meter`), referenced to **mean sea level (MSL)** per the DSDL's altitude definition ("distance between the local mean sea level (MSL) and the focal point of the antenna"). A receiver's ellipsoidal (WGS84) height is not published on this subject; personalities expose it as the generic field `alt_ellipsoid` in the RawSample stream.
-- Velocity is NED metres per second (`float32[3] meter_per_second`): `vel_north` → [0], `vel_east` → [1], `vel_down` → [2]. Components default to 0 when not supplied.
-- Covariance is carried on the upper-right-triangle diagonal of each 3×3 matrix (`float16[6]`, elements [0], [3], [5]). Position covariance (m²) takes `pos_h_acc²` for the latitude and longitude diagonal entries and `pos_v_acc²` for the altitude entry. Velocity covariance ((m/s)²) takes `vel_s_acc²` on all three diagonal entries.
-- A missing accuracy field — or, for velocity covariance, a fix with no velocity component supplied — yields the sentinel variance `1.0e6` rather than 0. A zero covariance reads as perfect certainty; the sentinel marks the axis as effectively unknown.
+* Position latitude and longitude are radians as `float64`; altitude is metres as `float64` (`uavcan.si.unit.length.WideScalar.1.0 meter`), referenced to **mean sea level (MSL)** per the DSDL's altitude definition ("distance between the local mean sea level (MSL) and the focal point of the antenna"). A receiver's ellipsoidal (WGS84) height is not published on this subject; personalities expose it as the generic field `alt_ellipsoid` in the RawSample stream.
+* Velocity is NED metres per second (`float32[3] meter_per_second`): `vel_north` → \[0], `vel_east` → \[1], `vel_down` → \[2]. Components default to 0 when not supplied.
+* Covariance is carried on the upper-right-triangle diagonal of each 3×3 matrix (`float16[6]`, elements \[0], \[3], \[5]). Position covariance (m²) takes `pos_h_acc²` for the latitude and longitude diagonal entries and `pos_v_acc²` for the altitude entry. Velocity covariance ((m/s)²) takes `vel_s_acc²` on all three diagonal entries.
+* A missing accuracy field — or, for velocity covariance, a fix with no velocity component supplied — yields the sentinel variance `1.0e6` rather than 0. A zero covariance reads as perfect certainty; the sentinel marks the axis as effectively unknown.
 
 **Enable / disable.** Each subject is emitted only when both a routed field is present in the sample and its subject-ID is non-zero; an ID of `0` disables that projection. Each subject-ID is the writable, persistent `uavcan.pub.<name>.id` register (§8.2.7), defaulting to the vendor-fixed band (accel 6146, gyro 6147, magnetic field 6151, temperature 6148, pressure 6149, GNSS 6150, scalar block base 6152) and host-commissionable; `register.List` enumerates them. The compiled defaults live in the constants registry (`constants/cyphal.yaml`).
 
@@ -877,8 +878,8 @@ for sample in c.iter_samples():       # decoded from device descriptors
 
 The C header of `libnxs`, `nxs.h`, and the documents the verbs print under `--json` keep their shape from 1.1.0 on:
 
-- A struct in `nxs.h` keeps its size, its layout and the meaning of each field in every later release, so a program built against an earlier header keeps working against a later library. A new field arrives as a new struct with its own function beside the released one: `nxs_capture_pair_of` reads a synced pair's part beside `nxs_capture_of`, and `nxs_unit_read_cam_runs` reads the camera-run counter beside `nxs_unit_read_diag`. A function keeps its signature and the meaning of its return values, and an enum keeps every value it has.
-- Every `--json` document carries `contract`. This release prints contract 2, described by the `surface` schema the SDK ships. A release candidate previews it, and the final release fixes its keys. The schema lists every key an object may carry and refuses any other, so a key added to any object comes with a new contract number and that number's schema, as a renamed or removed key does. A program reads `contract` first and refuses a number it does not know.
+* A struct in `nxs.h` keeps its size, its layout and the meaning of each field in every later release, so a program built against an earlier header keeps working against a later library. A new field arrives as a new struct with its own function beside the released one: `nxs_capture_pair_of` reads a synced pair's part beside `nxs_capture_of`, and `nxs_unit_read_cam_runs` reads the camera-run counter beside `nxs_unit_read_diag`. A function keeps its signature and the meaning of its return values, and an enum keeps every value it has.
+* Every `--json` document carries `contract`. This release prints contract 2, described by the `surface` schema the SDK ships. A release candidate previews it, and the final release fixes its keys. The schema lists every key an object may carry and refuses any other, so a key added to any object comes with a new contract number and that number's schema, as a renamed or removed key does. A program reads `contract` first and refuses a number it does not know.
 
 ## 10. Personality authoring
 
@@ -890,12 +891,12 @@ Drivers are generated from a sensor datasheet by the `nxs-generate-sensor-person
 
 The NXS image begins with a 13-byte header: a 4-byte magic (`NXS\0`, the ASCII bytes `N` `X` `S` then a NUL pad, `4E 58 53 00`), a 1-byte **major**, a 1-byte **minor**, a 1-byte **kind** (0 DRIVER, 1 CAMERA, 2 HUB: the program of a device on the host's own bus, run by the host tool's executor and refused by a device at upload), a 1-byte **flags** field (bit 0: the bytecode section is sealed; bit 1: reserved), the personality-name length and the parameter and output counts, then a 2-byte **probe length**: the offset inside the bytecode where `probe()` ends and `configure()` begins. A probe length past the end of the bytecode is refused at load. This version is distinct from `PROTO_VERSION` (§2): `PROTO_VERSION` is the register-map contract, while the NXS major/minor is the image format the firmware executes.
 
-After the name comes the bytecode section: a 2-byte length and the bytes when plain; when sealed, a 16-byte nonce, the 2-byte length, and the ciphertext (AES-128-CTR under a key the firmware holds), which the device decrypts into its program buffer at load and never serves back. The probe block, the parameters, the outputs, and the communication-profile trailer (§10.2) follow. A descriptor trailer closes the image: a count byte, then records of type (1 byte), length (2 bytes, little-endian), and bytes, at most 2048 bytes in all. The device keeps the trailer as it is and serves it through personality info (§6.11). Record types: 1 MODES (the index of the `mode` parameter, then each mode's value, geometry, timing, and name), 2 CONTROLS, 3 LAWS, 4 CAPTURE, 5 INSTANCE_CAL (reserved), 6 IDENTITY (address, register and value widths, identity and alive registers, the default mode, whether the head takes the hub's trigger and whether its pulse width is the exposure, name, compatible), 7 PROGRAM, 8 TRIGGERS (the index of the `trigger` parameter and each conversion's value and name), 9 SHIPPED (retired: the number stays reserved, no compiler writes it and every decoder skips it), 10 STATUS (the status probes: register, format, decode table), 11 RUN_PARAMS (the run parameters a host stages in physical units: index, range, default, name, unit); 0xE0 to 0xEF are vendor records the tool never interprets, and an unknown type is kept and skipped. The camera personality reference lists what each record carries.
+After the name comes the bytecode section: a 2-byte length and the bytes when plain; when sealed, a 16-byte nonce, the 2-byte length, and the ciphertext (AES-128-CTR under a key the firmware holds), which the device decrypts into its program buffer at load and never serves back. The probe block, the parameters, the outputs, and the communication-profile trailer (§10.2) follow. A descriptor trailer closes the image: a count byte, then records of type (1 byte), length (2 bytes, little-endian), and bytes, at most 2048 bytes in all. The device keeps the trailer as it is and serves it through personality info (§6.11). Record types: 1 MODES (the index of the `mode` parameter, then each mode's value, geometry, timing, and name), 2 CONTROLS, 3 LAWS, 4 CAPTURE, 5 INSTANCE\_CAL (reserved), 6 IDENTITY (address, register and value widths, identity and alive registers, the default mode, whether the head takes the hub's trigger and whether its pulse width is the exposure, name, compatible), 7 PROGRAM, 8 TRIGGERS (the index of the `trigger` parameter and each conversion's value and name), 9 SHIPPED (retired: the number stays reserved, no compiler writes it and every decoder skips it), 10 STATUS (the status probes: register, format, decode table), 11 RUN\_PARAMS (the run parameters a host stages in physical units: index, range, default, name, unit); 0xE0 to 0xEF are vendor records the tool never interprets, and an unknown type is kept and skipped. The camera personality reference lists what each record carries.
 
 LOAD runs an image only when both hold:
 
-- **major == the firmware's NXS major.** A differing major means the wire layout or an opcode's semantics changed; the image is rejected.
-- **the image's required minor ≤ the firmware's NXS minor.** The compiler stamps the required minor as the highest minor of any opcode the image emits, and never below the minor that introduced the image's kind (HUB: 3), so a reader older than the kind refuses the image here rather than past the gate.
+* **major == the firmware's NXS major.** A differing major means the wire layout or an opcode's semantics changed; the image is rejected.
+* **the image's required minor ≤ the firmware's NXS minor.** The compiler stamps the required minor as the highest minor of any opcode the image emits, and never below the minor that introduced the image's kind (HUB: 3), so a reader older than the kind refuses the image here rather than past the gate.
 
 The contract is one-directional: new firmware runs old images of the same major, and old firmware cleanly refuses an image that needs an opcode it lacks rather than mis-executing it. A new opcode bumps the minor; an incompatible-format change bumps the major. The current image format is **major 2, minor 3** (minor 3 adds the HUB kind). The header carries this format version, not the product version: any image-format movement accompanies a product-MINOR firmware release, and the `nxs` tool refuses a stale compiled image with its rebuild command. Firmware of major 2 does not load major-1 images; the tool recompiles every built-in personality on upload and `nxs switch` re-provisions saved slots.
 
@@ -996,4 +997,3 @@ Five counters record faults the device absorbs without failing a command, and a 
 `nxs status` prints the fault counters (§9).
 
 Serial acknowledgements carry the same codes as signed 16-bit results (0 = success, negative = error).
-

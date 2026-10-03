@@ -1,7 +1,8 @@
 ---
-title: "NXS — Integration & Operation Manual"
+title: NXS — Integration & Operation Manual
 sidebar:
   order: 6
+slug: v1.1.0-rc2/reference/nxs-integration-manual
 ---
 
 Applies to: NXS v1.1 · product version 1.1.x · `nxs` tool 1.1.x
@@ -40,11 +41,11 @@ The first hour with the hardware is the guides on the documentation site: the [N
 
 ### 2.1 Carrier essentials
 
-- Supply and I/O are 3.3 V. The mikroBUS 3V3 sensor rail is firmware-switched — sensors are power-cycled at personality bind, so do not feed sensor circuits from another rail.
-- Sensor reset (mikroBUS RST) is driven by the loaded personality with per-personality polarity. Leave it unconnected for sensors without reset and never strap it to a fixed level. Do not tie RST to CS on the carrier either, because the bootloader reads that pair as a recovery request at every reset (§4.5).
-- CAN-FD requires an external transceiver on the carrier rated for the 4 Mbps data phase. Termination per CAN practice (120 Ω at both bus ends): v2 modules carry an on-board split termination that is **off by default** — commission `can-term on` (§4.3) on the two bus-end modules, or terminate externally. v1.0 modules always need external termination.
-- The host UART carries the host link in normal operation, and the update protocol during firmware update and recovery. Reserve it for that and do not share it with other carrier functions. Console and log output does not share the port, in the bootloader as much as in the application.
-- The socket contract — pin functions, the one-active-personality rule, and the pull-up requirement above 400 kHz on the sensor I²C bus: [Device Reference §2.2](../nxs-device-reference/). Pinout and electrical limits: the NXS product datasheet.
+* Supply and I/O are 3.3 V. The mikroBUS 3V3 sensor rail is firmware-switched — sensors are power-cycled at personality bind, so do not feed sensor circuits from another rail.
+* Sensor reset (mikroBUS RST) is driven by the loaded personality with per-personality polarity. Leave it unconnected for sensors without reset and never strap it to a fixed level. Do not tie RST to CS on the carrier either, because the bootloader reads that pair as a recovery request at every reset (§4.5).
+* CAN-FD requires an external transceiver on the carrier rated for the 4 Mbps data phase. Termination per CAN practice (120 Ω at both bus ends): v2 modules carry an on-board split termination that is **off by default** — commission `can-term on` (§4.3) on the two bus-end modules, or terminate externally. v1.0 modules always need external termination.
+* The host UART carries the host link in normal operation, and the update protocol during firmware update and recovery. Reserve it for that and do not share it with other carrier functions. Console and log output does not share the port, in the bootloader as much as in the application.
+* The socket contract — pin functions, the one-active-personality rule, and the pull-up requirement above 400 kHz on the sensor I²C bus: [Device Reference §2.2](../nxs-device-reference/). Pinout and electrical limits: the NXS product datasheet.
 
 ### 2.2 Transport choice
 
@@ -130,8 +131,8 @@ python3 -m pip install 'aliensense-nxs[cyphal,ros2] @ file:///tmp/aliensense_nxs
 
 On Ubuntu 24.04 the system interpreter refuses that install with `externally-managed-environment`; add `--break-system-packages`, because the bridge has to share `rclpy`'s interpreter and a virtual environment does not see it.
 
-- nxs must be installed into the sourced distro's own Python: `rclpy` ships with the distro, so an isolated `uv tool` environment cannot see it. `nxs ros2 --plan` alone needs no ROS.
-- The visualization launch (`viz:=true`, §5.10) uses `rviz2` with the `imu_tools` Imu display and PlotJuggler; install those packages for the distro to use it.
+* nxs must be installed into the sourced distro's own Python: `rclpy` ships with the distro, so an isolated `uv tool` environment cannot see it. `nxs ros2 --plan` alone needs no ROS.
+* The visualization launch (`viz:=true`, §5.10) uses `rviz2` with the `imu_tools` Imu display and PlotJuggler; install those packages for the distro to use it.
 
 ## 4. Operating
 
@@ -151,7 +152,7 @@ $NXS set sample_rate 250
 $NXS status
 ```
 
-`upload` compiles a personality from the shipped set and runs it. `caps` lists every parameter with its allowed values and defaults, a parameter the unit applies in place tagged `[live]` (§6.4 of the Interface Description: the others reload the personality); `set` re-configures the sensor live. An addressed `status` ends with the `Outputs:` block — each field's name, type, scale, offset, unit, and semantic — so the host can decode the sample record without a driver of its own. `get` on a name neither the personality nor the device carries answers `no parameter <name>` and lists both families, one `  - ` line each.
+`upload` compiles a personality from the shipped set and runs it. `caps` lists every parameter with its allowed values and defaults, a parameter the unit applies in place tagged `[live]` (§6.4 of the Interface Description: the others reload the personality); `set` re-configures the sensor live. An addressed `status` ends with the `Outputs:` block — each field's name, type, scale, offset, unit, and semantic — so the host can decode the sample record without a driver of its own. `get` on a name neither the personality nor the device carries answers `no parameter <name>` and lists both families, one ` -` line each.
 
 A full-scale change on an IMU (`set accel_fs 16`) retunes the output scale on the device; streamed values stay SI with no re-upload.
 
@@ -382,6 +383,7 @@ yakut sub 8184:uavcan.diagnostic.record.1.1
 ```
 
 Each record carries the device timestamp, the severity, and the log text. The floor is the `uavcan.diagnostic.severity` register: write `2` to stream informational lines during a session, and `4` to restore the default when done — values and semantics in the [Interface Description §8.2](../nxs-host-interface/). The stream is rate-bounded and sent below data priority, so subscribing never disturbs sample traffic.
+
 ### 4.9 Calibration
 
 Per-unit calibration corrects the SI outputs. The raw stream stays raw counts, and a raw sample decoded with the served record reproduces the SI subjects exactly. Wire surface, record layout, and the on-device procedures: [Interface Description §6.9](../nxs-host-interface/). The calibration verbs persist by default. `--no-persist` leaves the result in the running state, reverting at power-cycle.
@@ -705,7 +707,7 @@ ports:
       outputs: accel_x accel_y accel_z temp gyro_x gyro_y gyro_z
 ```
 
-A personality the unit does not hold is not listed. A unit prints a further `    ! ` line for each way it deviates and nothing where it agrees — `! drift: config` (parameters, resolved with `switch` or `tune --freeze`), `driver` (the personality), `shape` (the stored panel), `fw`, `orientation` (§5.1); `! cal: STALE` for the calibration guard (§4.9); `! vm: no-probe`; `! serial: MISMATCH`; `! link: degraded …`. A unit that answers and does not run its declared personality, its VM idle, in error or past a failed probe, is a finding under the unit beside its `! vm:` line, `! units.<name>: its declared personality does not run` with `nxs switch` to redeploy it, and the declaration reads `OUT OF TUNE`; `nxs switch` fails such a unit on the redeploy's verdict, `no sensor answered the deployed driver` for a Click that is not the declared sensor. A unit that does not answer at all is a `NO ANSWER` row. A unit on a camera port's bus is read under the port's bus lock: when another run holds that bus past a 20 s wait, as `nxsd` does while it brings the ports up after boot, the unit's row and the port's `HUB` line name that run, `another nxs run holds the bus after 20 s of waiting (nxsd brings the ports up after boot)`, and `--json` marks the unit `held`. The command is read-only on the bus and exits non-zero while any finding stands or any declared node is absent, so a deployment script gates on it. `nxs status --json` serves the same tree as data, with the verdict under `declaration.in_tune` and the list under `declaration.findings`. Each finding is an object: `where` (the manifest path it names), `fact`, `alternatives`, and `text` (the line the command prints). A unit that rides a camera link carries `rides: "<port>/<link>"`, and a link's unit lists what it holds under `personalities`.
+A personality the unit does not hold is not listed. A unit prints a further `   !` line for each way it deviates and nothing where it agrees — `! drift: config` (parameters, resolved with `switch` or `tune --freeze`), `driver` (the personality), `shape` (the stored panel), `fw`, `orientation` (§5.1); `! cal: STALE` for the calibration guard (§4.9); `! vm: no-probe`; `! serial: MISMATCH`; `! link: degraded …`. A unit that answers and does not run its declared personality, its VM idle, in error or past a failed probe, is a finding under the unit beside its `! vm:` line, `! units.<name>: its declared personality does not run` with `nxs switch` to redeploy it, and the declaration reads `OUT OF TUNE`; `nxs switch` fails such a unit on the redeploy's verdict, `no sensor answered the deployed driver` for a Click that is not the declared sensor. A unit that does not answer at all is a `NO ANSWER` row. A unit on a camera port's bus is read under the port's bus lock: when another run holds that bus past a 20 s wait, as `nxsd` does while it brings the ports up after boot, the unit's row and the port's `HUB` line name that run, `another nxs run holds the bus after 20 s of waiting (nxsd brings the ports up after boot)`, and `--json` marks the unit `held`. The command is read-only on the bus and exits non-zero while any finding stands or any declared node is absent, so a deployment script gates on it. `nxs status --json` serves the same tree as data, with the verdict under `declaration.in_tune` and the list under `declaration.findings`. Each finding is an object: `where` (the manifest path it names), `fact`, `alternatives`, and `text` (the line the command prints). A unit that rides a camera link carries `rides: "<port>/<link>"`, and a link's unit lists what it holds under `personalities`.
 
 ### 5.9 Serving compiled personalities over Cyphal
 
@@ -775,7 +777,7 @@ g++ -std=c++20 -I"$NXS_LIB/include" main.cpp -L"$NXS_LIB" -lnxs -Wl,-rpath,"$NXS
 
 The buffer handed out stays valid until the next frame or the session's end; a session opens on the facts `on` recorded for the link (the capture node, the mode, the geometry, the rate, the exposure window and, on a synced pair's link, its part in the pair's exposure and gain), so the link must be up.
 
-On a frame-synced pair of one camera kind with a pod on each link, link A's capture session decides the pair's gain and link B's runs with its exposure loop locked, so the two cameras run one exposure and one gain. `nxsd` copies A's analog gain to B's head every frame under the sensor's register hold while the port runs frame sync with both links up; its journal reads `cam0: B follows A at 30 fps`, and `cam0: B stops following A (the port runs free)` when the port runs free, parks or changes its rate. `nxs <port> status --json` names each link's part under `sync_live.ae`, and `nxs <port> status` whether `nxsd` copies the gain (§5.11). The camera nodes, `nxs.cam.frames` and the tool's own viewers open each link that way, without ISP digital gain, noise reduction or edge enhancement and with each link's own white balance. Link B's session starts locked at the gain `nxsd` last copied from A, the `gain_db` line of `/var/lib/aliensense/cam/follow/<port>`, so B's first frame runs that gain. A pipeline of your own on link B locks its loop the same way, `aelock=true gainrange="G G" ispdigitalgainrange="1 1" tnr-mode=0 ee-mode=0` on `nvarguscamerasrc` with G = 10^(gain_db/20), or its loop moves B's gain away from the pair's; where the file names no gain, G is 1 and B's head runs 0 dB until `nxsd` copies A's gain a frame later. `camera_source:=argus` is refused on a pair's links, since the Argus node takes no exposure or gain setting; the launch names `camera_source:=gstreamer`.
+On a frame-synced pair of one camera kind with a pod on each link, link A's capture session decides the pair's gain and link B's runs with its exposure loop locked, so the two cameras run one exposure and one gain. `nxsd` copies A's analog gain to B's head every frame under the sensor's register hold while the port runs frame sync with both links up; its journal reads `cam0: B follows A at 30 fps`, and `cam0: B stops following A (the port runs free)` when the port runs free, parks or changes its rate. `nxs <port> status --json` names each link's part under `sync_live.ae`, and `nxs <port> status` whether `nxsd` copies the gain (§5.11). The camera nodes, `nxs.cam.frames` and the tool's own viewers open each link that way, without ISP digital gain, noise reduction or edge enhancement and with each link's own white balance. Link B's session starts locked at the gain `nxsd` last copied from A, the `gain_db` line of `/var/lib/aliensense/cam/follow/<port>`, so B's first frame runs that gain. A pipeline of your own on link B locks its loop the same way, `aelock=true gainrange="G G" ispdigitalgainrange="1 1" tnr-mode=0 ee-mode=0` on `nvarguscamerasrc` with G = 10^(gain\_db/20), or its loop moves B's gain away from the pair's; where the file names no gain, G is 1 and B's head runs 0 dB until `nxsd` copies A's gain a frame later. `camera_source:=argus` is refused on a pair's links, since the Argus node takes no exposure or gain setting; the launch names `camera_source:=gstreamer`.
 
 ```sh
 ros2 launch "$(nxs ros2 --launch-file)" viz:=true stamp:=synced
@@ -800,11 +802,11 @@ The auto-map, by descriptor semantic:
 
 Conventions:
 
-- **Timestamps.** By default (`--stamp synced`) `header.stamp` is the sample's acquisition time projected into host time via the device's two-way sync surface (Interface Description §6.8) — the launch banner prints each unit's measured bound (~0.1 ms I²C, ~0.3–0.5 ms CAN, ~1–2 ms serial). `--stamp device` publishes the raw device clock (µs since boot — not host time); `--stamp arrival` stamps on receipt. Before the first sync observation the bridge stamps on arrival and warns once. `--stamp itow` builds `header.stamp` from a GNSS unit's own solution epoch — its time-of-week field resolved to UTC against the host clock — on units whose descriptors carry the GNSS epoch semantics (Interface Description §6.6); `nxs ros2 --plan` marks those units epoch-capable. A message without a time-solved fix falls back to the synced projection with one warning. This mode requires an NTP- or PTP-disciplined host clock: the host resolves the GPS week, every non-GNSS topic still carries host-projected stamps, and a fallback transition steps `header.stamp` by the host-to-GNSS clock offset.
-- **Camera stamps.** A camera topic's `header.stamp` is the frame's delivery to the capture source mapped onto host time, about one frame period after the start of exposure, not the sensor's start of frame; the C++ frame API's `timestamp_ns` is the sensor's start of frame on the host's monotonic clock. The unit stamps above land on the same host time, so a frame and the samples around it compare on one axis, with the unit's sync bound as the alignment error.
-- **QoS.** Sensor-data profile (best-effort). Subscribe with matching QoS; `ros2 topic echo` adapts automatically.
-- **GNSS validity.** No `NavSatFix` publishes until latitude, longitude, and altitude are all present; a fix-type below fix threshold publishes `status: -1` (NO_FIX) with NaN position — never zeros — and suppresses `vel`. Covariance is the accuracy fields squared (`COVARIANCE_TYPE_DIAGONAL_KNOWN`); altitude is MSL, with any ellipsoidal height on its own `<field>` topic.
-- **Frames.** Vectors are in the sensor's own frame; mounting rotation is the consumer's static TF (`viz:=true` seeds a nominal per-unit transform for the bench). `frame_id` is the sanitized unit name (suite/`--unit`) or personality name (ad-hoc); `--frame-id` overrides it for a single device.
+* **Timestamps.** By default (`--stamp synced`) `header.stamp` is the sample's acquisition time projected into host time via the device's two-way sync surface (Interface Description §6.8) — the launch banner prints each unit's measured bound (~0.1 ms I²C, ~0.3–0.5 ms CAN, ~1–2 ms serial). `--stamp device` publishes the raw device clock (µs since boot — not host time); `--stamp arrival` stamps on receipt. Before the first sync observation the bridge stamps on arrival and warns once. `--stamp itow` builds `header.stamp` from a GNSS unit's own solution epoch — its time-of-week field resolved to UTC against the host clock — on units whose descriptors carry the GNSS epoch semantics (Interface Description §6.6); `nxs ros2 --plan` marks those units epoch-capable. A message without a time-solved fix falls back to the synced projection with one warning. This mode requires an NTP- or PTP-disciplined host clock: the host resolves the GPS week, every non-GNSS topic still carries host-projected stamps, and a fallback transition steps `header.stamp` by the host-to-GNSS clock offset.
+* **Camera stamps.** A camera topic's `header.stamp` is the frame's delivery to the capture source mapped onto host time, about one frame period after the start of exposure, not the sensor's start of frame; the C++ frame API's `timestamp_ns` is the sensor's start of frame on the host's monotonic clock. The unit stamps above land on the same host time, so a frame and the samples around it compare on one axis, with the unit's sync bound as the alignment error.
+* **QoS.** Sensor-data profile (best-effort). Subscribe with matching QoS; `ros2 topic echo` adapts automatically.
+* **GNSS validity.** No `NavSatFix` publishes until latitude, longitude, and altitude are all present; a fix-type below fix threshold publishes `status: -1` (NO\_FIX) with NaN position — never zeros — and suppresses `vel`. Covariance is the accuracy fields squared (`COVARIANCE_TYPE_DIAGONAL_KNOWN`); altitude is MSL, with any ellipsoidal height on its own `<field>` topic.
+* **Frames.** Vectors are in the sensor's own frame; mounting rotation is the consumer's static TF (`viz:=true` seeds a nominal per-unit transform for the bench). `frame_id` is the sanitized unit name (suite/`--unit`) or personality name (ad-hoc); `--frame-id` overrides it for a single device.
 
 `--hz N` thins each unit's stream as in §4.2; `--topic-base` moves the namespace root; `--map FILE` replaces the auto-map with explicit `{message, topic, mapping, constants}` blocks for the rare custom contract (single device only).
 
@@ -838,7 +840,6 @@ Live adjustments (`nxs cam0 A set fps 25`) are parameters staged on the pod's pe
 
 Same rig on another robot: install the tool, the kernel package and the assets, copy `suite.yaml`, and run `nxs switch` until it exits 0, rebooting each time it prints `REBOOT NEEDED`. A stock image reboots once for the camera buses and, with a camera declared, once more for the port's table. `generate` is for hardware you do not know. Reproducibility is the wheel version plus the assets version plus the declaration; `switch` refuses assets of another release.
 
-
 ## 6. Troubleshooting
 
 | Symptom | Likely cause | Action |
@@ -867,7 +868,7 @@ Same rig on another robot: install the tool, the kernel package and the assets, 
 | `nxs ros2 needs: pip install 'aliensense-nxs[ros2]'` | nxs not installed into the ROS environment's Python | source the ROS 2 environment and install the wheel into it (§3.5) |
 | `ros2: <unit>: serves no output descriptors` | no personality loaded and running on that unit | `nxs switch`, or `upload` + `run` on the unit, then relaunch |
 | no SI subject traffic while `stream` works | subject decimated or ID 0 | `nxs get decimation.<name>`; `commission --show` |
-| a camera verb refuses with a fact line and `  - ` lines under it | the configuration is outside the pack's laws, or the link is not up; the lines under the fact are the alternatives | run one of the alternatives; the mechanisms are in the camera triage runbook |
+| a camera verb refuses with a fact line and ` -` lines under it | the configuration is outside the pack's laws, or the link is not up; the lines under the fact are the alternatives | run one of the alternatives; the mechanisms are in the camera triage runbook |
 | `cam0/A: video did not lock` from `on` | a head holding stale state through a byte-perfect program, or a link that never trained; `on` already recovered the links once and ran the plan again | power-cycle the hub, then `nxs <port> status`; `nxs <port> <link> on --sensor <name>` if the head is not the declared part; a head that stays dark is unpowered or miscabled |
 | `capture FAILED after N attempts` | the consumer did not see the stream start, or the capture daemon is wedged | `nxs cam0 A on` again; restart the capture daemon |
 | `slot N holds a camera personality this nxs cannot read (…)` from `status` or `on` | the slot's image was compiled by another release of the tool | `nxs <port> <link> store rm N`, then upload the store's image (§4.1) |
