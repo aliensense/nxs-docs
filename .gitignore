@@ -4,6 +4,8 @@ node_modules/
 # Build output
 dist/
 .astro/
+# Diagrams astro-d2 renders at build time
+public/d2/
 
 # Framework-specific cache/state
 .mintlify/

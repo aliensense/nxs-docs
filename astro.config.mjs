@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs';
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
 import starlightVersions from 'starlight-versions';
+import d2 from 'astro-d2';
 
 const repositoryName = process.env.GITHUB_REPOSITORY?.split('/')[1] ?? 'nxs-docs';
 const repositoryOwner = process.env.GITHUB_REPOSITORY_OWNER ?? 'aliensense';
@@ -26,6 +27,10 @@ export default defineConfig({
 		'/reference/nxs-cam-descriptors/': '/reference/nxs-camera-patches/',
 	},
 	integrations: [
+		// The released documents carry their diagrams as D2 fences (the mirror
+		// expands each source in place); the build renders them with the D2
+		// binary (`brew install d2` locally; deploy.yml installs it).
+		d2({ layout: 'elk', pad: 16, theme: { dark: false } }),
 		starlight({
 			plugins: versions.length > 0 ? [starlightVersions({ versions })] : [],
 			title: 'NXS',

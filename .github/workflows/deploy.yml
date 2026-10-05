@@ -53,6 +53,11 @@ jobs:
           cache: npm
           cache-dependency-path: site-main/package-lock.json
 
+      # The reference and guide pages carry D2 diagram fences; astro-d2
+      # renders them with the D2 binary at build time.
+      - name: Install D2
+        run: curl -fsSL https://d2lang.com/install.sh | sudo sh -s -- --version v0.7.1
+
       - name: Build the root site
         id: build
         working-directory: site-main

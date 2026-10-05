@@ -117,6 +117,8 @@ Run this once (or after pulling changes):
 npm install
 ```
 
+The reference and guide pages carry their diagrams as D2 fences, which the build renders with the D2 binary. Install it once: `brew install d2` on macOS, or the installer at https://d2lang.com/tour/install for Windows and Linux.
+
 This may take a few minutes the first time.
 
 ## 5) Run the docs locally (editing mode)
