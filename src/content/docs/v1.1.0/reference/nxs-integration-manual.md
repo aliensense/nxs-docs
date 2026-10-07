@@ -1,7 +1,8 @@
 ---
-title: "NXS — Integration & Operation Manual"
+title: NXS — Integration & Operation Manual
 sidebar:
   order: 6
+slug: v1.1.0/reference/nxs-integration-manual
 ---
 
 Applies to: NXS v1.1 · product version 1.1.x · `nxs` tool 1.1.x
@@ -41,11 +42,11 @@ The first hour with the hardware is the guides on the documentation site: the [N
 
 ### 2.1 Carrier essentials
 
-- Supply and I/O are 3.3 V. The firmware switches the mikroBUS 3V3 sensor rail and power-cycles the sensors at personality bind. Do not feed sensor circuits from another rail.
-- The loaded personality drives the sensor reset (mikroBUS RST) with its own polarity. Leave it unconnected for a sensor without reset, and never strap it to a fixed level. Do not tie RST to CS on the carrier either. The bootloader reads that pair as a recovery request at every reset (§4.5).
-- CAN-FD needs an external transceiver on the carrier, rated for the 4 Mbps data phase. Terminate the bus per CAN practice, 120 Ω at both bus ends. A v2 unit carries an on-board split termination that is **off by default**. Commission `can-term on` (§4.3) on the two bus-end units, or terminate externally. A v1.0 unit always needs external termination.
-- The host UART carries the host link in normal operation, and the update protocol during firmware update and recovery. Reserve it for that and do not share it with other carrier functions. Console and log output does not share the port, in the bootloader as much as in the application.
-- The socket contract is in [Device Reference §2.2](../nxs-device-reference/). It covers the pin functions, the one-active-personality rule and the pull-up requirement above 400 kHz on the sensor I²C bus. Pinout and electrical limits are in the NXS product datasheet.
+* Supply and I/O are 3.3 V. The firmware switches the mikroBUS 3V3 sensor rail and power-cycles the sensors at personality bind. Do not feed sensor circuits from another rail.
+* The loaded personality drives the sensor reset (mikroBUS RST) with its own polarity. Leave it unconnected for a sensor without reset, and never strap it to a fixed level. Do not tie RST to CS on the carrier either. The bootloader reads that pair as a recovery request at every reset (§4.5).
+* CAN-FD needs an external transceiver on the carrier, rated for the 4 Mbps data phase. Terminate the bus per CAN practice, 120 Ω at both bus ends. A v2 unit carries an on-board split termination that is **off by default**. Commission `can-term on` (§4.3) on the two bus-end units, or terminate externally. A v1.0 unit always needs external termination.
+* The host UART carries the host link in normal operation, and the update protocol during firmware update and recovery. Reserve it for that and do not share it with other carrier functions. Console and log output does not share the port, in the bootloader as much as in the application.
+* The socket contract is in [Device Reference §2.2](../nxs-device-reference/). It covers the pin functions, the one-active-personality rule and the pull-up requirement above 400 kHz on the sensor I²C bus. Pinout and electrical limits are in the NXS product datasheet.
 
 ### 2.2 Transport choice
 
@@ -78,12 +79,12 @@ nxs switch
 
 The group change is once per host, effective after re-login. The unit answers at `0x30`. `nxs switch` installs the host's files with everything else it realizes (§5.11):
 
-- udev rules that give every camera-connector bus a stable name (`/dev/i2c-cam0`, `/dev/i2c-cam1`)
-- the file that keeps the crash reporter quiet about the capture daemon
-- the tab completion
-- the `nxsd` service
-- the shared state store `/var/lib/aliensense`
-- the declaration's directory `/etc/aliensense`, which the `i2c` group writes (§5)
+* udev rules that give every camera-connector bus a stable name (`/dev/i2c-cam0`, `/dev/i2c-cam1`)
+* the file that keeps the crash reporter quiet about the capture daemon
+* the tab completion
+* the `nxsd` service
+* the shared state store `/var/lib/aliensense`
+* the declaration's directory `/etc/aliensense`, which the `i2c` group writes (§5)
 
 On a Jetson that boots no camera bus, as a stock JetPack image does, it also installs the camera kernel package's I²C multiplexer overlay. The overlay goes under the generated boot label `aliensense_gen`, with or without a declaration, and the run exits 3 with `REBOOT NEEDED`. The camera-connector buses and their names exist from that reboot on. A declared camera later adds its port's camera table to the same label and asks for one more reboot. Units without a camera need none.
 
@@ -208,8 +209,8 @@ python3 -m pip install 'aliensense-nxs[cyphal,ros2] @ file:///tmp/aliensense_nxs
 
 On Ubuntu 24.04 the system interpreter refuses that install with `externally-managed-environment`. Add `--break-system-packages`: the bridge has to share `rclpy`'s interpreter, and a virtual environment does not see it.
 
-- Install nxs into the sourced distro's own Python. `rclpy` ships with the distro, so an isolated `uv tool` environment cannot see it. `nxs ros2 --plan` alone needs no ROS.
-- The visualization launch (`viz:=true`, §5.10) uses `rviz2` with the `imu_tools` Imu display and PlotJuggler. Install those packages for the distro to use it.
+* Install nxs into the sourced distro's own Python. `rclpy` ships with the distro, so an isolated `uv tool` environment cannot see it. `nxs ros2 --plan` alone needs no ROS.
+* The visualization launch (`viz:=true`, §5.10) uses `rviz2` with the `imu_tools` Imu display and PlotJuggler. Install those packages for the distro to use it.
 
 ## 4. Operating
 
@@ -231,7 +232,7 @@ $NXS status
 
 `upload` compiles a personality from the shipped set and runs it. `caps` lists every parameter with its allowed values and defaults. A parameter the unit applies in place is tagged `[live]`, and the others reload the personality (§6.4 of the Interface Description). `set` re-configures the sensor live.
 
-An addressed `status` ends with the `Outputs:` block, each field's name, type, scale, offset, unit and semantic. With it the host decodes the sample record without sensor-specific code of its own. `get` on a name neither the personality nor the device carries answers `no parameter <name>` and lists both families, one `  - ` line each. A unit that answers no parameters at all is not refusing the name. `get` then says `no personality runs on the unit, so none named <name>`, or that the personality that runs answers no parameters yet, and names the next step.
+An addressed `status` ends with the `Outputs:` block, each field's name, type, scale, offset, unit and semantic. With it the host decodes the sample record without sensor-specific code of its own. `get` on a name neither the personality nor the device carries answers `no parameter <name>` and lists both families, one ` -` line each. A unit that answers no parameters at all is not refusing the name. `get` then says `no personality runs on the unit, so none named <name>`, or that the personality that runs answers no parameters yet, and names the next step.
 
 A full-scale change on an IMU (`set accel_fs 16`) retunes the output scale on the device. Streamed values stay SI with no re-upload.
 
@@ -375,9 +376,9 @@ Answer `n` and nothing is pushed (exit status 1). `--allow-downgrade` answers fo
 
 The unit reboots into the new image after the transfer and confirms it on its own. The tool reads the unit's build identity before the push. It reads it again once the unit answers after the reboot, waiting up to 30 s. It reports one of three outcomes:
 
-- `✓ updated` with both identities
-- `✓ unchanged` when the unit already ran the pushed image
-- `✗ rejected or reverted` (exit status 1) when the unit still serves an identity other than the pushed file's. The bootloader refused the image or rolled it back. Read the device log (§4.8).
+* `✓ updated` with both identities
+* `✓ unchanged` when the unit already ran the pushed image
+* `✗ rejected or reverted` (exit status 1) when the unit still serves an identity other than the pushed file's. The bootloader refused the image or rolled it back. Read the device log (§4.8).
 
 A file that is not a signed MCUboot image is refused before the unit is touched, `zephyr.bin` instead of `zephyr.signed.bin`, or a truncated download:
 
@@ -880,10 +881,10 @@ Bare, `nxs tune --freeze` freezes every declared unit. `--dry-run` prints the bl
 
 `nxs tune` without flags opens the panel. It draws the rig as a tree, one line per node with its live figures. The tree holds:
 
-- each camera port with its hub
-- each link with its pod or its bare head
-- each pod's personalities under it
-- the units on a port's own bus under that port
+* each camera port with its hub
+* each link with its pod or its bare head
+* each pod's personalities under it
+* the units on a port's own bus under that port
 
 `absent` marks a declared node that does not answer, `new` an answering node the file does not name. Nothing else is annotated. The node under the cursor opens its knobs beneath it. The panel, `nxs tune --list` and the MCP `suite_get` show the same nodes. A port is named `cam1`, a link `cam1/A`, and a pod or a unit by its name. Each node's knobs sit in sections:
 
@@ -907,13 +908,13 @@ A knob at `(none)` removes its entry at save: the link's camera, the link's pod 
 
 The keys:
 
-- `↑↓` move
-- `←→` step a knob through its offered values
-- `s` save, writing a timestamped `.bak` beside the declaration and printing `saved · … · next: nxs switch`
-- `f` freeze the node under the cursor: its port on a port or a link, the unit on a unit
-- `i` strobe a unit's LED
-- `r` read the buses again
-- `q` quit
+* `↑↓` move
+* `←→` step a knob through its offered values
+* `s` save, writing a timestamped `.bak` beside the declaration and printing `saved · … · next: nxs switch`
+* `f` freeze the node under the cursor: its port on a port or a link, the unit on a unit
+* `i` strobe a unit's LED
+* `r` read the buses again
+* `q` quit
 
 A save the laws refuse shows the fact and its alternatives under the tree and keeps the edits. The panel signals no daemon: `nxs switch` realizes what it saved.
 
@@ -1032,14 +1033,14 @@ ports:
       outputs: accel_x accel_y accel_z temp gyro_x gyro_y gyro_z
 ```
 
-A personality the unit does not hold is not listed. A unit prints a further `    ! ` line for each way it deviates, and nothing where it agrees. The lines are:
+A personality the unit does not hold is not listed. A unit prints a further `   !` line for each way it deviates, and nothing where it agrees. The lines are:
 
-- `! drift: config` for parameters, resolved with `switch` or `tune --freeze`
-- `personality` for the click personality, `shape` for the stored panel, `fw`, and `orientation` (§5.1)
-- `! cal: STALE` for the calibration guard (§4.9)
-- `! vm: no-probe`
-- `! serial: MISMATCH`
-- `! link: degraded …`
+* `! drift: config` for parameters, resolved with `switch` or `tune --freeze`
+* `personality` for the click personality, `shape` for the stored panel, `fw`, and `orientation` (§5.1)
+* `! cal: STALE` for the calibration guard (§4.9)
+* `! vm: no-probe`
+* `! serial: MISMATCH`
+* `! link: degraded …`
 
 A unit that answers and does not run its declared personality is a finding under the unit beside its `! vm:` line. Its VM is idle, in error or past a failed probe. The finding reads `! units.<name>: its declared personality does not run`, with `nxs switch` to redeploy it, and the declaration reads `OUT OF TUNE`. `nxs switch` fails such a unit on the redeploy's verdict, `no sensor answered the deployed personality` for a Click that is not the declared sensor. A unit that does not answer at all is a `NO ANSWER` row.
 
@@ -1192,7 +1193,7 @@ daemon -> status
 
 The camera nodes, `nxs.cam.frames` and the tool's own viewers open each link that way. They run without ISP digital gain, noise reduction or edge enhancement, and with each link's own white balance. Link B's session starts locked at the gain `nxsd` last copied from A, the `gain_db` line of `/var/lib/aliensense/cam/follow/<port>`. So B's first frame runs that gain.
 
-A pipeline of your own on link B locks its loop the same way, with `aelock=true gainrange="G G" ispdigitalgainrange="1 1" tnr-mode=0 ee-mode=0` on `nvarguscamerasrc` and G = 10^(gain_db/20). Otherwise its loop moves B's gain away from the pair's. Where the file names no gain, G is 1 and B's head runs 0 dB until `nxsd` copies A's gain a frame later. `camera_source:=argus` is refused on a pair's links, since the Argus node takes no exposure or gain setting. The launch names `camera_source:=gstreamer`.
+A pipeline of your own on link B locks its loop the same way, with `aelock=true gainrange="G G" ispdigitalgainrange="1 1" tnr-mode=0 ee-mode=0` on `nvarguscamerasrc` and G = 10^(gain\_db/20). Otherwise its loop moves B's gain away from the pair's. Where the file names no gain, G is 1 and B's head runs 0 dB until `nxsd` copies A's gain a frame later. `camera_source:=argus` is refused on a pair's links, since the Argus node takes no exposure or gain setting. The launch names `camera_source:=gstreamer`.
 
 ```sh
 ros2 launch "$(nxs ros2 --launch-file)" viz:=true stamp:=synced
@@ -1225,7 +1226,7 @@ Conventions:
 
 **QoS.** The sensor-data profile, best-effort. Subscribe with matching QoS. `ros2 topic echo` adapts automatically.
 
-**GNSS validity.** No `NavSatFix` publishes until latitude, longitude and altitude are all present. A fix-type below fix threshold publishes `status: -1` (NO_FIX) with NaN position, never zeros, and suppresses `vel`. Covariance is the accuracy fields squared (`COVARIANCE_TYPE_DIAGONAL_KNOWN`). Altitude is MSL, with any ellipsoidal height on its own `<field>` topic.
+**GNSS validity.** No `NavSatFix` publishes until latitude, longitude and altitude are all present. A fix-type below fix threshold publishes `status: -1` (NO\_FIX) with NaN position, never zeros, and suppresses `vel`. Covariance is the accuracy fields squared (`COVARIANCE_TYPE_DIAGONAL_KNOWN`). Altitude is MSL, with any ellipsoidal height on its own `<field>` topic.
 
 **Frames.** Vectors are in the sensor's own frame. Mounting rotation is the consumer's static TF, and `viz:=true` seeds a nominal per-unit transform for the bench. `frame_id` is the sanitized unit name, with a suite or `--unit`, or the personality name, ad-hoc. `--frame-id` overrides it for a single device.
 
@@ -1258,12 +1259,12 @@ units:
 
 `nxs switch` then runs the camera steps in order before the units of §5.2, one line per thing it changed:
 
-- the host: the bus rules, the capture daemon's quiet, the `nxsd` service, the state store `/var/lib/aliensense`, the declaration's directory `/etc/aliensense`
-- the camera buses on a host that boots none: `host: camera bus mux installed under aliensense_gen (FDT <dtb>)`, then `REBOOT NEEDED` and exit 3 (§3.2)
-- each declared pod's personality: `cam0/A: pod unit-cam0-a holds imx335, uploading imx900 ... ok`. The declaration is the truth, and switch brings the pod to it
-- a frame sync declared at a new rate: counted on the running port first, before any boot table. The count runs only under a booted table that admits the declaration, else the table's path. The line reads `cam0: counting the declared frame sync at 60 fps on the running port`. Links that do not deliver it end the run with the refusal, exit 1, and the previous sync back. Links that deliver it run as before until the reboot. A dry run names the count, and the lines after it assume the links deliver the rate
-- the port's boot table: `cam0: boot table installed` and the files the install wrote, then `REBOOT NEEDED` and exit 3. The ports come up on the booted table
-- the ports themselves, through the daemon when it runs, or here
+* the host: the bus rules, the capture daemon's quiet, the `nxsd` service, the state store `/var/lib/aliensense`, the declaration's directory `/etc/aliensense`
+* the camera buses on a host that boots none: `host: camera bus mux installed under aliensense_gen (FDT <dtb>)`, then `REBOOT NEEDED` and exit 3 (§3.2)
+* each declared pod's personality: `cam0/A: pod unit-cam0-a holds imx335, uploading imx900 ... ok`. The declaration is the truth, and switch brings the pod to it
+* a frame sync declared at a new rate: counted on the running port first, before any boot table. The count runs only under a booted table that admits the declaration, else the table's path. The line reads `cam0: counting the declared frame sync at 60 fps on the running port`. Links that do not deliver it end the run with the refusal, exit 1, and the previous sync back. Links that deliver it run as before until the reboot. A dry run names the count, and the lines after it assume the links deliver the rate
+* the port's boot table: `cam0: boot table installed` and the files the install wrote, then `REBOOT NEEDED` and exit 3. The ports come up on the booted table
+* the ports themselves, through the daemon when it runs, or here
 
 ```d2 title="What nxs switch does, in order, and the exits it takes"
 # What `nxs switch` does, in order, and the exits it takes (Integration &
@@ -1364,11 +1365,11 @@ A followed pair with both links up whose gain `nxsd` does not copy is a gap. The
 
 `nxs cam0 capture --frames 60` proves delivery at the declared rate through the capture stack, one verdict line per up link. It stops the tool's own viewers on the links it counts first, as the delivery check does. `nxs cam0 A capture --frames 60` does it for one link, or with `--snapshot <dir>` for its frames as JPEG files. A bare `nxs status` judges the whole declaration against the hub directories and the installed personalities:
 
-- modes must exist for the declared sensor and be one its personality's program carries
-- fps must sit within the mode's range on the port
-- the sync source must be one the chain offers
-- lane counts must carry the mode's rate and, for a pair, both heads' lines together
-- every unit parameter must be one of its personality's declared values
+* modes must exist for the declared sensor and be one its personality's program carries
+* fps must sit within the mode's range on the port
+* the sync source must be one the chain offers
+* lane counts must carry the mode's rate and, for a pair, both heads' lines together
+* every unit parameter must be one of its personality's declared values
 
 Each finding prints under the node it names and the command exits nonzero.
 
@@ -1460,7 +1461,7 @@ For the same rig on another robot, install the tool, the kernel package and the 
 | `nxs ros2 needs: pip install 'aliensense-nxs[ros2]'` | nxs not installed into the ROS environment's Python | source the ROS 2 environment and install the wheel into it (§3.5) |
 | `ros2: <unit>: serves no output descriptors` | no personality loaded and running on that unit | `nxs switch`, or `upload` + `run` on the unit, then relaunch |
 | no SI subject traffic while `stream` works | subject decimated or ID 0 | `nxs get decimation.<name>` and `commission --show` |
-| a camera verb refuses with a fact line and `  - ` lines under it | the configuration is outside the laws, or the link is not up. The lines under the fact are the alternatives | run one of the alternatives. The mechanisms are in the camera triage runbook |
+| a camera verb refuses with a fact line and ` -` lines under it | the configuration is outside the laws, or the link is not up. The lines under the fact are the alternatives | run one of the alternatives. The mechanisms are in the camera triage runbook |
 | `cam0/A: video did not lock` from `on` | a head holding stale state through a byte-perfect program, or a link that never trained. `on` already recovered the links once and ran the plan again | power-cycle the hub, then `nxs <port> status`. `nxs <port> <link> on --sensor <name>` if the head is not the declared part. A head that stays dark is unpowered or miscabled |
 | `capture FAILED after N attempts` | the consumer did not see the stream start, or the capture daemon is wedged | `nxs cam0 A on` again, or restart the capture daemon |
 | `slot N holds a cam personality this nxs cannot read (…)` from `status` or `on` | the slot's image was compiled by another release of the tool | `nxs <port> <link> store rm N`, then upload the store's image (§4.1) |

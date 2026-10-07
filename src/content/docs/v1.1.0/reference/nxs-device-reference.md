@@ -1,7 +1,8 @@
 ---
-title: "NXS Smart Sensor Co-Processor — Device Reference"
+title: NXS Smart Sensor Co-Processor — Device Reference
 sidebar:
   order: 2
+slug: v1.1.0/reference/nxs-device-reference
 ---
 
 Applies to: NXS v1.1 · product version 1.1.x
@@ -24,11 +25,11 @@ NXS is a sensor co-processor unit. It runs click personalities as sandboxed byte
 
 Calibration is per unit. A stored affine (M·v + b) per vector sensor plus a mounting-orientation code applies in the SI tier. The raw sample stream carries unmodified sensor counts (§3.1). A personality is uploaded at runtime, so no firmware rebuild is needed per sensor. Every output field is self-described by name, type, scale/offset, canonical SI unit and semantic, so a host decodes any sensor without sensor-specific code. Sensors attach on a mikroBUS socket over I²C, SPI or UART.
 
-- Compute: 32-bit Arm Cortex-M4F @ 160 MHz
-- Flash: 512 KB, as a 48 KB bootloader, 2 × 220 KB firmware slots (A/B update) and 24 KB configuration storage
-- SRAM: 112 KB
-- Firmware update: dual-slot with automatic rollback (watchdog 3 s, self-confirm ≈ 1 s), and a recovery path independent of the application
-- Persistent state: personality store (8 slots, click and cam personalities alike), node identity and subject configuration, per-subject decimation, per-unit calibration record
+* Compute: 32-bit Arm Cortex-M4F @ 160 MHz
+* Flash: 512 KB, as a 48 KB bootloader, 2 × 220 KB firmware slots (A/B update) and 24 KB configuration storage
+* SRAM: 112 KB
+* Firmware update: dual-slot with automatic rollback (watchdog 3 s, self-confirm ≈ 1 s), and a recovery path independent of the application
+* Persistent state: personality store (8 slots, click and cam personalities alike), node identity and subject configuration, per-subject decimation, per-unit calibration record
 
 ## 2. Interfaces
 
@@ -181,8 +182,8 @@ On 2 CSI lanes the frame-synced IMX900 1920x1080 pair runs at 30 and 50 fps, and
 
 The product version is `MAJOR.MINOR.PATCH`.
 
-- MAJOR: the host-facing contract (register map, served Cyphal types) changed incompatibly. Requalify the integration.
-- MINOR: the personality image format moved. Rebuild personality images with the matching `nxs` tool.
-- PATCH: drop-in, always.
+* MAJOR: the host-facing contract (register map, served Cyphal types) changed incompatibly. Requalify the integration.
+* MINOR: the personality image format moved. Rebuild personality images with the matching `nxs` tool.
+* PATCH: drop-in, always.
 
 The device self-reports all contract versions at runtime (register `0x19`, the `.nxs` header, `GetInfo`). Full model: [Interface Description §2/§10.1](../nxs-host-interface/).

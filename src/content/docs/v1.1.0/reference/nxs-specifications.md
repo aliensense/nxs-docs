@@ -1,7 +1,8 @@
 ---
-title: "NXS — Technical Specifications"
+title: NXS — Technical Specifications
 sidebar:
   order: 1
+slug: v1.1.0/reference/nxs-specifications
 ---
 
 Applies to: NXS v1.1 · product version 1.1.x
@@ -89,7 +90,7 @@ A click personality is a short, human-readable Python description of the sensor,
 | Housing | 6061 aluminum alloy |
 | Mounting | 4 × M2 × 0.4, L3 |
 
-<div style="page-break-after: always;"></div>
+<div style="page-break-after: always;" />
 
 ## Environmental & Ruggedness
 
@@ -102,14 +103,14 @@ A click personality is a short, human-readable Python description of the sensor,
 
 ## Software
 
-- `nxs` CLI and Python SDK. It probes, uploads and compiles personalities, configures, streams decoded SI samples and manages the personality store. It commissions node/subject IDs, with CAN bit timing and termination. It calibrates (`calibrate`, `set orientation`), strobes the locate LED (`identify`) and pushes firmware. The same commands run over I²C, Cyphal/serial, and Cyphal/CAN. Installs as one wheel via `uv tool install`
-- Suite management: every unit (link, firmware pin, sensor panel) is declared in one `suite.yaml`. `nxs switch` idempotently converges every unit, and `nxs status` reports the declaration against the rig node by node. `nxs tune --freeze` adopts live tuning back into the declaration
-- Multi-node provisioning over the bus — compile a personality once to a file, serve it to many nodes over the standard Cyphal file protocol
-- ROS 2: the bundled host-side bridge (`nxs ros2`) maps the self-described SI fields onto standard ROS 2 topics. A newly added sensor appears on the right topic with no per-sensor wiring, with optional device-to-host time-synced stamps
-- AI personality generation: personalities are authored against a public DSL, with AI-assisted generation from the sensor datasheet as the primary flow. It covers any mikroBUS Click sensor on I²C / SPI / UART / AN / PWM
-- Cyphal node: standard SI output subjects (acceleration, angular velocity, magnetic field, temperature, pressure), decodable with stock OpenCyphal tooling such as yakut / pycyphal. Plus a liveness heartbeat and device info
+* `nxs` CLI and Python SDK. It probes, uploads and compiles personalities, configures, streams decoded SI samples and manages the personality store. It commissions node/subject IDs, with CAN bit timing and termination. It calibrates (`calibrate`, `set orientation`), strobes the locate LED (`identify`) and pushes firmware. The same commands run over I²C, Cyphal/serial, and Cyphal/CAN. Installs as one wheel via `uv tool install`
+* Suite management: every unit (link, firmware pin, sensor panel) is declared in one `suite.yaml`. `nxs switch` idempotently converges every unit, and `nxs status` reports the declaration against the rig node by node. `nxs tune --freeze` adopts live tuning back into the declaration
+* Multi-node provisioning over the bus — compile a personality once to a file, serve it to many nodes over the standard Cyphal file protocol
+* ROS 2: the bundled host-side bridge (`nxs ros2`) maps the self-described SI fields onto standard ROS 2 topics. A newly added sensor appears on the right topic with no per-sensor wiring, with optional device-to-host time-synced stamps
+* AI personality generation: personalities are authored against a public DSL, with AI-assisted generation from the sensor datasheet as the primary flow. It covers any mikroBUS Click sensor on I²C / SPI / UART / AN / PWM
+* Cyphal node: standard SI output subjects (acceleration, angular velocity, magnetic field, temperature, pressure), decodable with stock OpenCyphal tooling such as yakut / pycyphal. Plus a liveness heartbeat and device info
 
 ## Documentation
 
-- The guides on the documentation site, from the [NVIDIA Jetson deployment guide](https://aliensense.github.io/nxs-docs/guides/deploy-jetson/) on, are the getting-started path. The [Integration & Operation Manual](../nxs-integration-manual/) is the operating reference. The [Interface Description](../nxs-host-interface/) is the normative contract: the register map, the Cyphal node model, commissioning. The [Device Reference](../nxs-device-reference/) carries limits and the supported-sensor catalog. Click personalities are authored per the [Click Personality Reference](../nxs-click-personalities/), cam personalities per the [Cam Personality Reference](../nxs-cam-personalities/). The [FAQ](https://aliensense.github.io/nxs-docs/hardware/faq/) answers common questions.
-- The NXS Datasheet (full electrical ratings, connector pinouts, mechanical, handling) and the product brochure are published on the product page.
+* The guides on the documentation site, from the [NVIDIA Jetson deployment guide](https://aliensense.github.io/nxs-docs/guides/deploy-jetson/) on, are the getting-started path. The [Integration & Operation Manual](../nxs-integration-manual/) is the operating reference. The [Interface Description](../nxs-host-interface/) is the normative contract: the register map, the Cyphal node model, commissioning. The [Device Reference](../nxs-device-reference/) carries limits and the supported-sensor catalog. Click personalities are authored per the [Click Personality Reference](../nxs-click-personalities/), cam personalities per the [Cam Personality Reference](../nxs-cam-personalities/). The [FAQ](https://aliensense.github.io/nxs-docs/hardware/faq/) answers common questions.
+* The NXS Datasheet (full electrical ratings, connector pinouts, mechanical, handling) and the product brochure are published on the product page.
