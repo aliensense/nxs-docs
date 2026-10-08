@@ -105,7 +105,7 @@ A single cross-transport host CLI (and Python SDK, `NxsClient`) that drives ever
 
 ### Where do I get the `nxs` tool and the SDK?
 
-The `nxs` wheel is published with each firmware release in the [`aliensense/nxs`](https://github.com/aliensense/nxs) repository; one wheel covers the CLI, the Python SDK, and every transport, and the repository carries the `nxs-generate-sensor-driver` skill under `skills/`. Install the wheel with pip or uv and make first contact with `nxs probe` — [Getting Started](../../getting-started/install/) walks through it.
+The `nxs` wheel ships with every kit, and newer releases come from [support@aliensense.com](mailto:support@aliensense.com); one wheel covers the CLI, the Python SDK, and every transport, and the `nxs-generate-sensor-driver` skill ships alongside it. Install from the wheel file: the name `nxs` on PyPI belongs to an unrelated package. Install the wheel with pip or uv and make first contact with `nxs probe` — [Getting Started](../../getting-started/install/) walks through it.
 
 ### Can I run multiple NXS nodes on one bus?
 
