@@ -134,18 +134,18 @@ Smoke test from the client: list the tools. 20 names appear, in the order of §3
 | Tool | Purpose | Arguments | Hardware effect | Refuses when |
 |---|---|---|---|---|
 | `probe` | the units that answer, on every bus or a port's | port?, link? | none (reads identity registers) | no ACK rows, or an unknown port, which lists the ports |
-| `generate` | the rig as it answers: ports, hubs, links, sensors, units | dry_run? | walks every camera port and bus. With dry_run false it writes hardware.yaml, the report of what answered, and seeds suite.yaml when there is none. A unit on a bare bus running nothing is named by trying every personality on it | no hub and no camera port, or the wiring file is not writable |
+| `generate` | the rig as it answers: ports, hubs, links, sensors, units | dry_run? | walks every camera port and bus. With dry_run false it writes hardware.yaml, the report of what answered, and seeds suite.yaml when there is none. It writes a declaration of api 2 or the 1.0 form again in api 3, the earlier file kept beside it. A unit on a bare bus running nothing is named by trying every personality on it | no hub and no camera port, or the wiring file is not writable |
 | `status` | the declaration against the rig, or a port's presence and health | port?, link? | none (reads identity and status registers) | hub does not answer |
 | `identify` | strobe a unit's LED to find the box | unit? | the unit's LED strobes ~10 s | unit does not answer |
 | `samples` | read decoded samples from a unit | unit?, count? | reads the sample window. Over Cyphal it sets the output decimation for the read and puts the previous value back | no personality measuring, or the unit does not answer |
 | `caps` | what the sensor offers, with the laws | port, link? | none (reads facts) | no hub serves the port, or nothing installed describes its sensor |
 | `on` | bring a link or the whole port up | port, link?, sensor?, mode?, fps?, dry_run? | writes the program, trains links, follows video lock, counts two seconds of frames on every camera link | the laws refuse the mode or rate, the hub does not answer, video did not lock, or the links do not deliver the rate |
-| `off` | park the whole port | port | sensors to standby, CSI gate closed, viewers stopped, each pod's head parked | kernel-owned hub |
+| `off` | park the whole port | port | bare heads to standby, CSI gate closed, viewers stopped, each pod's head parked by its unit | kernel-owned hub |
 | `capture` | headless delivery proof | port, link, frames?, timeout_s? | opens a capture session on the up link, the tool's viewer on it stopped first | the link is not up, or the frames were not delivered |
-| `get` | read a knob: the port's sync, the sensor's, the unit's | port, link, knob | none (reads sensor registers) | unknown knob lists the knobs |
-| `set` | change a knob under the laws, sync being the port's frame sync | port, link?, knob, value, dry_run?, fps?, exposure_us? | writes sensor registers, or the link's unit for a knob that is its personality's parameter. Sync starts or stops the hub's generator, and a sync or fps change counts two seconds of frames | an unlawful value, with the lawful alternatives. A sync or rate the links do not deliver, the previous one restored. A live sibling link, for a camera knob. The port is not up |
+| `get` | read a knob: the port's sync, the sensor's, the unit's | port, link, knob | none (reads a row of the map, a bare head's registers or the unit's parameter) | unknown knob lists the knobs |
+| `set` | change a knob under the laws, sync being the port's frame sync | port, link?, knob, value, dry_run?, fps?, exposure_us? | a row's commit on a pod's or smart camera's map, a bare head's registers, or the link's unit for its personality's parameter. Sync starts or stops the hub's generator, and a sync or fps change counts two seconds of frames | an unlawful value, with the lawful alternatives. A sync or rate the links do not deliver, the previous one restored. A live sibling link, for a bare head's camera knob. The port is not up |
 | `suite_get` | the declaration as options | — | none | no camera port on the host and no declaration |
-| `suite_schema` | the rig's rules as JSON Schema | — | none | the declaration does not parse |
+| `suite_schema` | each node's rows on this rig as JSON Schema | — | none | the declaration does not parse |
 | `suite_set` | set declared values from their options, one or a batch | channel?, field?, value?, section?, sets? | writes suite.yaml once (a timestamped backup, created when absent) | a value not among the options, a field that repeats without its section, or a knob a set moved that the batch does not name |
 | `switch` | apply the saved declaration to the units | dry_run?, accept_new_serial? | retunes or re-uploads the personality on units whose entry differs | the declaration is out of tune, or a declared unit does not answer |
 | `reload` | apply the saved declaration to the ports | — | nxsd reconverges changed ports | the declaration is out of tune, or nxsd is not running |
@@ -158,23 +158,32 @@ Arguments marked `?` are optional. `fps` is the rate `set` runs the port's frame
 
 `port` is a port name (`cam1`). `link` is a link name (`A`, `B`). `knob` names come from `caps`. `channel`, `section`, and `field` come from `suite_get`.
 
-`unit` is a declared unit name. When it is omitted, `identify` and `samples` address the one unit answering on the host's camera buses. So a unit can be found and read before it is declared.
+On a pod's link and on a smart camera, a camera knob is a row of the map ([Interface Description §4.5](../nxs-host-interface/)). `caps` lists those rows, `set` commits a row by its name in the row's unit, and `get` reads the row's value in effect. A value past a range row's bounds commits at the bound, and the output names the value in effect and the one asked. On a head with no unit that is not a smart camera, `set` writes the sensor's registers. A knob the camera does not have goes to the link's unit as its personality's parameter.
+
+`unit` is the name of a unit node in the declaration. When it is omitted, `identify` and `samples` address the one unit answering on the host's camera buses. So a unit can be found and read before it is declared.
 
 Read tools return the same JSON the command line prints with `--json`: `probe`, `generate`, `status`, `samples`, `caps`, `suite_get`, `suite_set`, `reload`. Every such document carries `contract: 2`, and the SDK's tests validate every surface against the shipped `surface` schema. `suite_schema` returns the rig schema itself, a JSON Schema document with no `contract` member. Live tools return the verb's text.
 
 A refused call is a tool error. Its text is the verb's refusal: the fact on one line, then one line per lawful alternative. A JSON tool's refusal is the document `{"refused": {"fact": …, "alternatives": […]}}`, so a program reads the alternatives without parsing a sentence. The agent asks for one of them.
 
-A finding in a `status` document has the same parts. `where` is the declaration path it names, and `text` is the sentence the command line prints, beside `fact` and `alternatives`.
+A finding in a `status` document has the same parts. `where` is the node path it names, such as `nodes.hub-cam0.parameters.sync_source`, and `text` is the sentence the command line prints, beside `fact` and `alternatives`. A bare `status` document also carries the declaration's `graph`: each node with its `state`, `present`, `absent` or `unknown`, and each connection as `from` and `to`. The `graph` definition of the shipped `surface` schema states its shape.
 
 ### 3.1 Schemas and refusals
 
 Each format has one role. The declaration file is YAML, because a person edits it. Every tool result and every `--json` document is JSON. The contract between them is JSON Schema 2020-12. The shipped `suite` schema covers the file, the `surface` schema the results, and the rig schema that `suite_schema` returns covers one rig. A declaration rendered as JSON loads and validates identically, so an agent may write either.
 
-The rig schema is the declaration schema narrowed by what is on this rig. Each port lists only the keys its nodes bring, and any other key is refused. Wiring values are constants, and a declaration may leave them out.
+A declaration carries `api: 3`, its `nodes` by name and its `connections`. A node is a `type` and its `parameters`, the rows of its block by name in display form and its identity pins. A connection is keyed by the port that feeds, `<node>.<port>`, and lists the ports it feeds ([Integration & Operation Manual §5.1](../nxs-integration-manual/)).
 
-A link's `camera` is a sensor an installed cam personality describes, and its `mode` is one of the modes that sensor's program carries. Its `fps` is inside that mode's range on the port, a single value for a part whose mode runs at one rate. A unit's `config` admits the keys its personality takes. A violation names the key it broke and the values that key admits.
+The rig schema is the declaration schema narrowed by the nodes on this rig. Each declared node's `type` is a constant. Its `parameters` admit its identity pins and the rows its block offers at its place in the graph, with the values each takes there. A row the block does not offer there is left out:
 
-The schema is necessary and not sufficient. It judges names, values, and the combinations inside one link. `status` judges what spans nodes, such as two cameras on one port or the lanes against the hub's output.
+- A hub's rows follow its frame sync: `sync_fps` under `fsync` where the trigger laws leave a rate, and `exposure` in free run. Its `csi_a_lanes` takes the lanes the host's connector takes.
+- A camera's `mode` names the modes its program carries, and its `fps` spans the rates its mode runs free at on its port. Under frame sync it has no `fps`.
+- A click's rows are its personality's, and a host's are its connectors' lanes and drivers.
+- A unit's own rows are integers, judged where the unit answers.
+
+A violation names the key it broke and the values that key admits.
+
+The schema is necessary and not sufficient. It judges names and values one node at a time. The loader holds the connections' laws. `status` judges what spans nodes, such as two cameras on one port or the lanes against the hub's output.
 
 Findings and refusals follow the shape of the Linux kernel's netlink extended ACK. That ACK carries the message, the offset of the invalid attribute, and the policy for a rejected attribute: here `fact`, `where`, and `alternatives`. `suite_schema` is the counterpart of netlink's policy dump, which gives the supported attributes with the ranges of values the kernel accepts ([netlink introduction](https://docs.kernel.org/userspace-api/netlink/intro.html)).
 
@@ -185,7 +194,7 @@ Findings and refusals follow the shape of the Linux kernel's netlink extended AC
 Edit the declaration, validate it, apply it.
 
 1. Call `suite_get`: every channel, its fields, the values each may take.
-2. Call `suite_set` with `channel: cam1/A`, `field: fps` and `value: 25`, one value from the offered list. A batch goes in `sets` (`cam1:HUB=maxim,max96792a`, `cam1/A:SENSOR=framos,imx900`), applied in order and saved once. It saves the declaration with a timestamped backup, and the result carries the findings.
+2. Call `suite_set` with `channel: cam1/A`, `field: fps` and `value: 25`, a rate the knob offers. A batch goes in `sets` (`cam1:HUB=maxim,max96792a`, `cam1/A:CAM=framos,imx900`), applied in order. It writes the declaration once, in api 3 with a timestamped backup, and the result carries the findings.
 3. Call `status` with no port. It answers `declaration.in_tune: true`, or findings that name the lawful alternatives, each under the node it concerns.
 4. Call `switch`: it retunes or re-uploads every declared unit whose personality or settings differ from its entry. It leaves a matching unit alone. Call `reload`: `nxsd` reconverges only the ports whose declaration changed. It also reconverges the ports a by-hand `on` brought up away from theirs.
 
@@ -193,9 +202,11 @@ A stream on an untouched port keeps running. A changed rate, or a mode of anothe
 
 A field name that exists in two sections of a channel (two personalities on one unit carry `sample_rate`) is refused. Pass `section` with the section's label (`imu-a/iam20680`). A set that moves another knob (a mode whose rate the laws pull) is refused unless the batch names that knob after it.
 
-A channel with `declared: false` is a port the platform names, or a unit that answered with no declaration entry yet. `presence` says whether a hub or a unit answers on it. Its `DECLARE` section carries the knobs that write the entry. A port carries `HUB`: an installed hub, or `connector` for a camera wired to the host's connector. Each of its links (the channel `cam1/A`) carries `SENSOR` and `POD`. A unit or a pod carries `PERSONALITY`.
+A channel with `declared: false` is a port the platform names, or a unit that answered with no node in the declaration yet. `presence` says whether a hub or a unit answers on it. Its `DECLARE` section carries the knobs that write its nodes. A port carries `HUB`: an installed hub, or `connector` for a camera wired to the host's connector. Each of its links (the channel `cam1/A`) carries `CAM` and `POD`. A unit or a pod carries one `CLICK` knob per click node on its socket, `CLICK`, then `CLICK-2`.
 
-`suite_set` on those knobs declares the node, and creates the declaration when absent. The link's camera knobs (`mode`, `fps`), the port's `SYNC` and `GAIN` knobs and a personality's parameters appear under their nodes on the next `suite_get`.
+`suite_set` on those knobs declares the nodes and their connections, and creates the declaration when absent. Each block the knobs declare opens its rows section on the next `suite_get`. That is the port's `hub` and `host`, the link's `camera`, a click's `<unit>/<personality>` and the unit's own. A section's `kind` is `declare` for the knobs that write nodes and `rows` for a block's rows.
+
+A rows section's fields are the block's rows by name. A value is the row's display form: a name such as `fsync`, or a number in the row's unit, `12` for a gain in dB. A row the block does not offer at that point is absent, such as the hub's `sync_fps` in free run.
 
 ### 4.2 Tune live, then freeze
 
@@ -204,7 +215,7 @@ Change values on the hardware, verify, then write what works into the declaratio
 1. Call `on` with `port: cam1`, `link: A`. The link comes up. The result reads `video locked`, and the delivery check that counted two seconds of its frames, `cam1: verified 30.0 fps (A 30.0)`.
 2. Call `set` with `knob: exposure`, `value: 8ms`, applied under the sensor's laws.
 3. Call `capture` with `frames: 1700`: sixty seconds of frames must arrive. `on` counted two seconds of frames, and this count proves the stream holds for a minute. A locked link proves nothing.
-4. Call `freeze`: the units' live parameters become the declaration. It leaves a camera's exposure alone. In free run the capture stack's loop sets it, and a declaration fixes it only as `camera.exposure_us` together with `camera.gain_db`.
+4. Call `freeze`: the units' live parameters become their click nodes' parameters. It leaves a camera's exposure alone. In free run the capture stack's loop sets it, unless the hub node declares `exposure` with `gain`.
 
 ### 4.3 Verify a capture
 
@@ -237,22 +248,23 @@ The schema stops a wrong name or an out-of-range value before anything is writte
 
 ### 4.7 Discover the rig
 
-1. Call `generate` with `dry_run: true`, the default. It lists every camera port with the nodes that answered on it (the hub, each link's serializer, sensor, and unit). After the ports come the units on the bare buses. It writes nothing.
+1. Call `generate` with `dry_run: true`, the default. It lists every camera port with the nodes that answered on it (the hub, each link's serializer, sensor, and unit). After the ports come the units on the bare buses. It writes nothing. Over a declaration of an earlier language, the 1.0 form or api 2, the dry run refuses and names `nxs generate`.
 2. Read `unanswered`. A port carries it when the wiring or the platform names a hub and nothing answers at its address. That hub stays out of `hardware.yaml`. With its power and cabling checked, call `generate` again.
-3. Call `generate` with `dry_run: false`. It writes `hardware.yaml` from the walk, a report that no verb reads, and seeds `suite.yaml` when there is none. It names a unit on a bare bus running nothing by trying every personality on it. `hardware`, `seeded`, and `kept` in the result say what it wrote.
+3. Call `generate` with `dry_run: false`. It writes `hardware.yaml` from the walk, a report that no verb reads, and seeds `suite.yaml` when there is none. It writes an earlier declaration again in api 3, the earlier file kept as `suite.yaml.1.0` or `suite.yaml.api2`. It names a unit on a bare bus running nothing by trying every personality on it. `hardware`, `seeded`, `kept` and `migrated` in the result say what it wrote. `undeclared` lists the ports where a Hub, head or unit answered and a kept declaration does not name.
 4. Call `status` with no port: the declaration against what answered.
 
-A declared hub that does not answer is a finding in step 4: `cam1: the hub does not answer at 0x6a`, with the power and cabling check as the alternative. A declared camera no installed cam personality describes is a finding that names the installed sensors.
+A declared hub that does not answer is a finding in step 4: `cam1: the hub does not answer at 0x6a`, with the power and cabling check as the alternative. A type nothing installed describes is refused when the declaration loads, with `nxs describe <type>` and `nxs personality install <directory>` among the alternatives.
 
 ## 5. Safety and limits
 
 - **Refusals are results.** `on` with `fps: 500` answers `link A: 500 fps is outside 1920x1080 RAW10's 1.50–160.49 fps (the datasheet frame law's range with 1 camera on 2 CSI lanes)` and names the whole rates at the ends, `fps 160` and `fps 2`, as its alternatives. The agent asks for a rate inside the range. Retrying 500 gets the same answer. A rate inside the range that the rig does not deliver is refused the same way, after `on` or `set` counts two seconds of frames. The answer is `cam0: 60 fps asked, 58.1 delivered on A, 57.9 on B`, naming the whole rate at or under the lowest.
 - **Register-level access does not exist.** No tool writes a named register. Every write goes through a declared knob or a captured program.
-- **Live siblings are protected.** `set` on one link refuses while the other link streams, because isolating a link's control window would drop the sibling's video. Park first (`off`), or set before `on`. A unit's parameter (a Click's rate) is no camera knob: `set` writes it to the link's unit and parks nothing.
+- **Live siblings are protected.** On a bare head `set` on one link refuses while the other link streams, because isolating a link's control window would drop the sibling's video. Park first (`off`), or set before `on`. A pod's or a smart camera's knob commits on its camera door and selects no window, so the other link keeps streaming. A unit's parameter (a Click's rate) is no camera knob: `set` writes it to the link's unit and parks nothing.
 - **`on`'s recovery is destructive on purpose.** When video does not lock it power-dips every head on the port. Nothing else does.
-- **A kernel-owned hub is read-only.** With `hub: {driver: kernel}` in the declaration, `on`, `off` and `set` refuse. `status` still answers from directly readable registers.
-- **A hub change keeps the link sensors.** Every hub offers every installed cam personality, so a port whose hub changes keeps its link sensors. A sensor no installed cam personality describes is not among the options. A sensor set on a port with no hub is refused with `set cam1:HUB first, in the same --set batch or before`. `sets` carries both in one call, the hub first: `cam1:HUB=…`, then `cam1/A:SENSOR=…`.
+- **A hub this host does not run is read-only.** With the host's row `<connector>_driver: kernel`, `on`, `off` and `set` refuse, and `status` answers from directly readable registers. On a passive host, where a module owns the Hub, they refuse the same way.
+- **A hub change keeps the cameras.** Every hub offers every installed cam personality, so a port whose hub changes keeps its camera nodes. A sensor no installed cam personality describes is not among the options. A sensor set on a port with no hub is refused with `set cam1:HUB first, in the same --set batch or before`. `sets` carries both in one call, the hub first: `cam1:HUB=…`, then `cam1/A:CAM=…`.
 - **The declaration is optional.** Ports resolve from the platform (udev aliases, the mux channel ids). `reload` and `freeze` need a declaration, and `switch` without one runs the host's steps alone. On a host that boots no camera bus it installs the boot table that starts them and ends `REBOOT NEEDED`, else it names `nxs generate`. `suite_get` lists the platform's ports and what answered without one, `suite_set` declares into one, and the live tools never read it.
+- **An earlier declaration is refused.** Every tool that reads the declaration refuses one of the 1.0 form or api 2 and names `nxs generate`. `generate` with `dry_run: false` writes it again in api 3 and keeps the earlier file beside it, `suite.yaml.1.0` or `suite.yaml.api2`.
 - **`switch` writes `/boot`.** On a host that boots no camera bus it writes the camera kernel package's multiplexer overlay into one boot label (`aliensense_gen`). When the booted table lacks a declared mode, or its rows miss the declared rate and bit depth, the generated overlay goes in too. It copies that overlay into `/boot/camera-dtbos`, adds it to the same label and backs up `extlinux.conf`. The operator's own labels are untouched, and nothing reboots.
 - **Time.** `on` takes seconds to a minute (training). `capture` with 1700 frames takes about a minute. `on` with a recovery takes up to several minutes. The server applies a timeout per tool and reports it as a refusal.
 
@@ -262,13 +274,14 @@ A declared hub that does not answer is a finding in step 4: `cam1: the hub does 
 |---|---|---|
 | `nxs mcp needs: pipx inject aliensense-nxs 'aliensense-nxs[mcp]'` | the `mcp` package is not installed | run the line the message names. In an environment pip made, it names `pip install 'aliensense-nxs[mcp]'` |
 | `on` answers `REBOOT NEEDED` | the booted capture table lacks the sensor mode, and `switch` regenerated and installed the overlay | reboot the Jetson, then call `on` again |
-| `on` answers `<port>/<link>: … boots on no row of this port's table (…)` | the mode is of another pixel format than the port's declaration runs, so its table carries no row for it | declare the mode on every link (`links.<link>.camera.mode`) and call `switch`, or call `on` with a mode the answer names |
-| `on` answers `MISMATCH: declared …, answers as …` | another sensor sits behind the link | call `on` with the detected `sensor`, or fix the declaration |
+| `on` answers `<port>/<link>: … boots on no row of this port's table (…)` | the mode is of another pixel format than the port's declaration runs, so its table carries no row for it | declare the mode on every camera node of the port (`nodes.<camera>.parameters.mode`) and call `switch`, or call `on` with a mode the answer names |
+| `on` answers `MISMATCH: declared …, answers as …` | another sensor sits behind the link | call `on` with the detected `sensor`, or fix the camera node's `type` |
 | the client lists no tools, or `Connection closed` at initialize | the server did not start: ssh asked for a password, or the client launched ssh with a minimal environment that hides the key agent (`SSH_AUTH_SOCK`) | run the ssh command by hand. Use the dedicated key the deploy guide restricts to the server, named by `IdentityFile` in `~/.ssh/config`, or hand the agent through in the client's `env`. Claude Desktop passes no agent socket |
 | `hub … does not answer` | deserializer unpowered, wrong bus, wrong module SKU in the boot config | `probe` without a port, and DEPLOY.md §2 of the camera kernel package |
 | `capture` fails, `Failed to create CaptureSession` | `nvargus-daemon` wedged by an earlier raw session | `sudo systemctl restart nvargus-daemon`, and `capture` restarts it once by itself |
 | `video did not lock` after `on` | a head holding stale state | `on` recovers once by itself. Check the cabling, then `on` again (§4.4) |
 | `suite_set` refuses `ambiguous` | two sections of the channel carry the field | pass `section` |
 | `suite_set` refuses `… — name the knob in the same --set batch` | a set moved a dependent knob (a mode change pulled the rate) | add the moved knob to `sets` after the set that moved it |
+| a tool refuses `<path>: declares the 1.0 form (ports and units), and this nxs reads api 3`, or `<path>.api: 2, an earlier declaration language, and this nxs reads api 3` | the declaration is in an earlier language | call `generate` with `dry_run: false`: it writes the declaration again in api 3 and keeps the earlier file beside it |
 | `reload` answers `played: false` | `nxsd` is not running, or the declaration is out of tune | `status` with no port, and start `nxsd` |
 | `nxs cam1 A stream` shows nothing for the agent | viewers need a display | agents use `capture`, and viewers are for a person at the screen |

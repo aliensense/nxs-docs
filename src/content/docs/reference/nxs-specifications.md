@@ -28,7 +28,7 @@ NXS is a sensor connector unit that gives robotics teams plug-and-play access to
 |---|---|
 | Compute | STM32G491 (Cortex-M4F @ 160 MHz), 512 KB flash, 112 KB SRAM |
 | Status indicator | Green status LED with a moving-pattern state ladder. The states: idle, one heartbeat per running job (measuring or camera up), sensor or camera head not answering, personality or camera-run fault. A host-triggered identify strobe (`nxs identify`). A static LED always means firmware not executing |
-| Product versioning | MAJOR.MINOR.PATCH. A MAJOR step is a host-facing contract change, which needs a requalification. A MINOR step means the personality image format moved, so personality images are rebuilt. A PATCH step is drop-in. All contract versions self-reported at runtime |
+| Product versioning | MAJOR.MINOR.PATCH. A MAJOR step is a host-facing contract change, which needs a requalification. A MINOR step means the personality image format grew, so personality images are rebuilt. A PATCH step is drop-in. All contract versions self-reported at runtime |
 
 ## Connectivity
 
@@ -36,11 +36,13 @@ NXS is a sensor connector unit that gives robotics teams plug-and-play access to
 |---|---|
 | Upstream link to compute | CAN-FD, up to 40 m at a reduced data-phase bit rate, and/or GMSL3/2, up to 15 m. CAN-FD carries Cyphal sensor data. GMSL carries video + the tunnelled I²C register map |
 | GMSL3/2 link | Single coax cable carries power over coax (POC), multi-Gbps video, and sensor data as tunnelled I²C |
-| Host interfaces | I²C register map at address `0x30` over the GMSL tunnel or direct · Cyphal/CAN-FD · Cyphal/serial (460800 baud, 8N1) |
+| Host interfaces | one I²C map at `0x30`, the unit door, and `0x31`, the camera door, over the GMSL tunnel or direct · Cyphal/CAN-FD · Cyphal/serial (460800 baud, 8N1) |
 | CAN | Selectable bit timing. The default is CAN-FD, 1 Mbit/s arbitration / 4 Mbit/s data, sample points 0.875 / 0.750. Classic / lower-rate profiles match an existing bus, and the host interface must match the selected profile. On-board split termination, software-switched per unit (off by default) on hardware revisions that carry it. Earlier units terminate externally, see the [Device Reference](../nxs-device-reference/) |
 | Sensor-side interface | mikroBUS socket. Sensors attach over I²C (Fast-mode, 330 kHz on the wire), SPI, or UART. Personalities can also sample the AN pad and drive the PWM pad. RST and INT are personality-managed |
 | Image sensor mezzanine | DF40 60-pin, MIPI CSI-2 (2 or 4 data lanes) |
 | Cam personality | The image sensor's register program, stored on the unit as a sealed VM image and run on the pod bus under the host's bus token. Modes, controls, and laws are served back to the host, so a deployed host carries no sensor source. Shipped for the Sony IMX900, global shutter, and IMX335, rolling shutter |
+| Camera door | The unit's second I²C address, `0x31`: the cam personality's parameter rows with their values and ranges in physical units, and the mode table. A host kernel driver maps its controls to the rows and commits changes in one write. 64 rows and 16 modes in the layout, 16 rows on a pod |
+| Smart camera | A camera that programs its own sensor and serves the same map's capture cells alone. It answers at `0x31` on its port's own bus, with no unit door |
 | Timestamping | Microsecond-resolution per-sample timestamps (local clock). A two-way sync surface on every transport translates them into host time with bounded error |
 
 The I²C register map is complete on its own: samples, parameters, personality store, commissioning, and firmware update. A sensor added to an existing GMSL camera link needs no additional bus or protocol. Cyphal adds networked, multi-node access on the same firmware.
@@ -53,7 +55,7 @@ The I²C register map is complete on its own: samples, parameters, personality s
 | Acquisition | Direct register reads, one burst per sample, stamped at the data-ready edge. Analog capture and PWM drive on the mikroBUS pads |
 | Output | SI units, with datasheet-nominal scaling on-device, plus the part's own compensation math where its datasheet defines it. Self-describing per-field descriptors (name, type, scale, offset, unit, semantic) readable from the device |
 | Calibration | Optional per-unit calibration (accelerometer / gyroscope / magnetometer vectors, encoder zero-offset) and mounting-orientation alignment. Host-guided with `nxs calibrate`, persisted on the board, applied in the SI tier. The raw stream stays unmodified |
-| Parameters | Runtime-settable, device-validated: enumerated value sets or `[min, max]` ranges. Live parameters apply without interrupting sampling |
+| Parameters | Up to 16 per personality, runtime-settable and device-validated: enumerated value sets or `[min, max]` ranges. APPLY parameters take effect without interrupting sampling |
 | Communication profiles | Up to 3 per personality image — a dual-bus sensor (I²C + SPI) switches bus by parameter write, no re-upload |
 | Sample window | ≤ 128 bytes per sample (≤ 110 over the I²C sample record). Up to 16 output fields per personality |
 | Sample rate | Sensor-bound, up to 1 kHz. 250 Hz sustained over the serial link. Configurable output decimation, device-wide + per-SI-subject |
@@ -102,8 +104,8 @@ A click personality is a short, human-readable Python description of the sensor,
 
 ## Software
 
-- `nxs` CLI and Python SDK. It probes, uploads and compiles personalities, configures, streams decoded SI samples and manages the personality store. It commissions node/subject IDs, with CAN bit timing and termination. It calibrates (`calibrate`, `set orientation`), strobes the locate LED (`identify`) and pushes firmware. The same commands run over I²C, Cyphal/serial, and Cyphal/CAN. Installs as one wheel via `uv tool install`
-- Suite management: every unit (link, firmware pin, sensor panel) is declared in one `suite.yaml`. `nxs switch` idempotently converges every unit, and `nxs status` reports the declaration against the rig node by node. `nxs tune --freeze` adopts live tuning back into the declaration
+- `nxs` CLI and Python SDK. It probes, uploads and compiles personalities, configures, streams decoded SI samples and manages the personality store. It commissions node/subject IDs, with CAN bit timing and termination. It calibrates (`calibrate`), sets an IMU's mount rotation (`set orientation`), strobes the locate LED (`identify`) and pushes firmware. The same commands run over I²C, Cyphal/serial, and Cyphal/CAN. Installs as one wheel via `uv tool install`
+- Suite management: the rig is declared in one `suite.yaml`, each node a type with its parameters and the connections between their ports. Every block describes itself, and `nxs describe` prints what a type offers. `nxs switch` idempotently converges every unit, and `nxs status` reports the declaration against the rig node by node. `nxs tune --freeze` adopts live tuning back into the declaration
 - Multi-node provisioning over the bus — compile a personality once to a file, serve it to many nodes over the standard Cyphal file protocol
 - ROS 2: the bundled host-side bridge (`nxs ros2`) maps the self-described SI fields onto standard ROS 2 topics. A newly added sensor appears on the right topic with no per-sensor wiring, with optional device-to-host time-synced stamps
 - AI personality generation: personalities are authored against a public DSL, with AI-assisted generation from the sensor datasheet as the primary flow. It covers any mikroBUS Click sensor on I²C / SPI / UART / AN / PWM
