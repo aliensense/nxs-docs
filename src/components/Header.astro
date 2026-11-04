@@ -4,18 +4,35 @@ import config from 'virtual:starlight/user-config';
 import LanguageSelect from 'virtual:starlight/components/LanguageSelect';
 import Search from 'virtual:starlight/components/Search';
 import SiteTitle from 'virtual:starlight/components/SiteTitle';
-import SocialIcons from 'virtual:starlight/components/SocialIcons';
 import ThemeSelect from 'virtual:starlight/components/ThemeSelect';
+
+import versions from '../../versions.json';
 
 const baseUrl = import.meta.env.BASE_URL.endsWith('/')
 	? import.meta.env.BASE_URL
 	: `${import.meta.env.BASE_URL}/`;
 const currentPath = Astro.url.pathname;
 
-const navLinks = [
-	{ label: 'Getting Started', href: `${baseUrl}getting-started/overview/`, activePrefix: `${baseUrl}getting-started/` },
-	{ label: 'Hardware', href: `${baseUrl}hardware/product-description/`, activePrefix: `${baseUrl}hardware/` },
+// One pill per section. Hardware spans the NXS and the Hub pages.
+const tabs = [
+	{
+		label: 'Start',
+		href: `${baseUrl}getting-started/overview/`,
+		prefixes: [`${baseUrl}getting-started/`],
+	},
+	{ label: 'Guides', href: `${baseUrl}guides/`, prefixes: [`${baseUrl}guides/`] },
+	{
+		label: 'Hardware',
+		href: `${baseUrl}hardware/product-description/`,
+		prefixes: [`${baseUrl}hardware/`, `${baseUrl}hub/`],
+	},
+	{ label: 'Reference', href: `${baseUrl}reference/`, prefixes: [`${baseUrl}reference/`] },
 ];
+
+// The edition label names the release the root of the site documents; the
+// release-export workflow appends each published tag to versions.json.
+const latest = versions.at(-1)?.slug;
+const edition = latest ? `NXS · ${latest}` : 'NXS · SENSOR CO-PROCESSOR';
 
 const shouldRenderSearch =
 	config.pagefind || config.components.Search !== '@astrojs/starlight/components/Search.astro';
@@ -24,31 +41,27 @@ const shouldRenderSearch =
 <div class="header">
 	<div class="title-wrapper sl-flex">
 		<SiteTitle />
+		<span class="wordmark-sub">aliensense / documentation</span>
 	</div>
-	<nav class="top-links sl-hidden lg:sl-flex" aria-label="Primary navigation">
+	<nav class="tabs sl-hidden lg:sl-flex" aria-label="Sections">
 		{
-			navLinks.map((link) => (
+			tabs.map((tab) => (
 				<a
-					href={link.href}
-					class:list={[
-						'top-link',
-						currentPath.startsWith(link.activePrefix) && 'active',
-					]}
+					href={tab.href}
+					aria-current={tab.prefixes.some((p) => currentPath.startsWith(p)) ? 'page' : undefined}
 				>
-					{link.label}
+					{tab.label}
 				</a>
 			))
 		}
 	</nav>
-	<div class="search-wrapper sl-flex print:hidden">
-		{shouldRenderSearch && <Search />}
-	</div>
-	<div class="sl-hidden md:sl-flex print:hidden right-group">
-		<div class="sl-flex social-icons">
-			<SocialIcons />
+	<div class="right-group sl-flex print:hidden">
+		<span class="edition">{edition}</span>
+		<div class="search-wrapper sl-flex">{shouldRenderSearch && <Search />}</div>
+		<div class="sl-hidden md:sl-flex pickers">
+			<ThemeSelect />
+			<LanguageSelect />
 		</div>
-		<ThemeSelect />
-		<LanguageSelect />
 	</div>
 </div>
 
@@ -63,58 +76,29 @@ const shouldRenderSearch =
 		}
 
 		.title-wrapper {
+			align-items: baseline;
 			overflow: clip;
 			padding: 0.25rem;
 			margin: -0.25rem;
 			min-width: 0;
 		}
 
-		.top-links {
+		.right-group {
 			align-items: center;
-			gap: 0.5rem;
-		}
-
-		.top-link {
-			color: var(--sl-color-gray-3);
-			text-decoration: none;
-			font-size: 0.9rem;
-			font-weight: 600;
-			line-height: 1;
-			padding: 0.55rem 0.75rem;
-			border-radius: 999px;
-			border: 1px solid transparent;
-			transition: color 180ms ease, border-color 180ms ease, background-color 180ms ease;
-		}
-
-		.top-link:hover,
-		.top-link.active {
-			color: var(--sl-color-text);
-			background: color-mix(in srgb, var(--sl-color-accent) 10%, transparent);
-			border-color: color-mix(in srgb, var(--sl-color-accent) 32%, transparent);
+			gap: 1.25rem;
 		}
 
 		.search-wrapper {
-			flex: 1;
-			justify-content: center;
-			min-width: 12rem;
+			justify-content: flex-end;
 		}
 
-		.right-group,
-		.social-icons {
-			gap: 1rem;
+		.pickers {
 			align-items: center;
+			gap: 1rem;
 		}
 
-		.social-icons::after {
-			content: '';
-			height: 2rem;
-			border-inline-end: 1px solid var(--sl-color-hairline-light);
-		}
-
-		@media (max-width: 63.99rem) {
-			.search-wrapper {
-				justify-content: flex-end;
-			}
+		.pickers:empty {
+			display: none;
 		}
 	}
 </style>

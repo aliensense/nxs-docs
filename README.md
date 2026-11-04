@@ -30,6 +30,26 @@ Built with [Astro Starlight](https://starlight.astro.build/).
   appended by the firmware repository's release-export workflow. The
   version picker comes from the `starlight-versions` plugin.
 
+## Theme
+
+The site is paper and ink, one light theme, after the Aliensense design
+language (`aliensense/design-language`): paper `#f1f1ee`, ink `#17171a`,
+the interface red `#d6390f` as the one accent per view, General Sans for
+display, Inter for body and Roboto Mono for labels, data and code. The
+fonts are self-hosted from `src/fonts/` with their licences beside them.
+
+- `src/styles/custom.css` carries the tokens, the Starlight palette
+  remap and every component restyle. There is no dark theme: the
+  `ThemeProvider` override pins the light theme and the picker is hidden.
+- `src/components/` overrides the header (wordmark, section pills,
+  edition label, search), the landing-page hero, the page title with its
+  section eyebrow, the footer colophon and the theme provider.
+  `PageTitleVersioned.astro` takes over once `versions.json` lists a
+  release, so the version notice of `starlight-versions` keeps rendering.
+- The landing page (`src/content/docs/index.mdx`) is laid out with the
+  classes the stylesheet defines: `paths`, `base`, `feature-grid`,
+  `after`.
+
 ## Authoring rules
 
 - Images live under `src/assets/`, never inside `src/content/docs/` —

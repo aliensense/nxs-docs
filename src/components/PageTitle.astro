@@ -1,0 +1,17 @@
+---
+const { entry, sidebar } = Astro.locals.starlightRoute;
+
+type SidebarEntry = (typeof sidebar)[number];
+
+// The eyebrow names the sidebar group the page belongs to.
+function holdsCurrent(entries: SidebarEntry[]): boolean {
+	return entries.some((item) =>
+		item.type === 'link' ? item.isCurrent : holdsCurrent(item.entries)
+	);
+}
+
+const group = sidebar.find((item) => item.type === 'group' && holdsCurrent(item.entries));
+---
+
+{group && <div class="page-eyebrow">{group.label}</div>}
+<h1 id="_top" data-page-title>{entry.data.title}</h1>

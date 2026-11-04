@@ -15,11 +15,13 @@ const isGitHubActions = process.env.GITHUB_ACTIONS === 'true';
 // the next build.
 const versions = JSON.parse(readFileSync(new URL('./versions.json', import.meta.url), 'utf8'));
 
+// DOCS_BASE overrides the base path for the staging half of the Pages
+// artifact (deploy.yml builds the staging branch under /staging/).
+const base = process.env.DOCS_BASE ?? (isGitHubActions ? `/${repositoryName}` : '');
+
 export default defineConfig({
 	site: `https://${repositoryOwner}.github.io`,
-	// DOCS_BASE overrides the base path for the staging half of the Pages
-	// artifact (deploy.yml builds the staging branch under /staging/).
-	base: process.env.DOCS_BASE ?? (isGitHubActions ? `/${repositoryName}` : '/'),
+	base: base || '/',
 	// Two reference documents were renamed when the sensor add-on noun
 	// became "patch"; the old addresses keep resolving.
 	redirects: {
@@ -36,6 +38,31 @@ export default defineConfig({
 			title: 'NXS',
 			description: 'Documentation for the Aliensense NXS sensor co-processor.',
 			tagline: 'Any sensor, SI units on the wire',
+			favicon: '/favicon-32x32.png',
+			// Code blocks: one light theme, flat frames, the mono face.
+			expressiveCode: {
+				themes: ['github-light'],
+				useStarlightDarkModeSwitch: false,
+				styleOverrides: {
+					borderRadius: '0',
+					borderColor: '#e3e3de',
+					codeBackground: '#ffffff',
+					codeFontFamily: "'Roboto Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace",
+					codeFontSize: '0.8125rem',
+					codeLineHeight: '1.6',
+					uiFontFamily: "'Roboto Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace",
+					frames: {
+						shadowColor: 'transparent',
+						editorTabBarBackground: '#f7f7f4',
+						editorActiveTabBackground: '#ffffff',
+						editorActiveTabIndicatorTopColor: '#17171a',
+						editorActiveTabIndicatorBottomColor: 'transparent',
+						terminalTitlebarBackground: '#f7f7f4',
+						terminalTitlebarDotsForeground: '#d6d7da',
+						terminalBackground: '#ffffff',
+					},
+				},
+			},
 			social: [
 				{
 					icon: 'github',
@@ -52,7 +79,8 @@ export default defineConfig({
 			],
 			customCss: ['/src/styles/custom.css'],
 			head: [
-				{ tag: 'meta', attrs: { name: 'theme-color', content: '#0b1220' } },
+				{ tag: 'meta', attrs: { name: 'theme-color', content: '#f1f1ee' } },
+				{ tag: 'link', attrs: { rel: 'apple-touch-icon', href: `${base}/apple-touch-icon.png` } },
 				{ tag: 'meta', attrs: { property: 'og:type', content: 'website' } },
 				{ tag: 'meta', attrs: { property: 'og:site_name', content: 'NXS' } },
 				{ tag: 'meta', attrs: { property: 'og:title', content: 'NXS' } },
@@ -60,15 +88,23 @@ export default defineConfig({
 					tag: 'meta',
 					attrs: {
 						property: 'og:description',
-						content: 'Plug in a sensor, upload a patch, read SI units — the NXS documentation set.',
+						content: 'Plug in a sensor, upload a patch, read SI units: the NXS documentation set.',
 					},
 				},
-				{ tag: 'meta', attrs: { property: 'og:image', content: '/favicon.svg' } },
+				{ tag: 'meta', attrs: { property: 'og:image', content: `${base}/apple-touch-icon.png` } },
 				{ tag: 'meta', attrs: { name: 'twitter:card', content: 'summary' } },
 			],
 			components: {
 				Head: './src/components/Head.astro',
 				Header: './src/components/Header.astro',
+				Hero: './src/components/Hero.astro',
+				Footer: './src/components/Footer.astro',
+				// The eyebrow title; with versions published it also carries the
+				// plugin's version notice, which the plugin hangs on the default title.
+				PageTitle:
+					versions.length > 0
+						? './src/components/PageTitleVersioned.astro'
+						: './src/components/PageTitle.astro',
 				ThemeProvider: './src/components/ThemeProvider.astro',
 			},
 			lastUpdated: true,
