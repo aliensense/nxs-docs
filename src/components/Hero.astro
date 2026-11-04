@@ -1,0 +1,31 @@
+---
+import { LinkButton } from '@astrojs/starlight/components';
+
+import versions from '../../versions.json';
+
+const { data } = Astro.locals.starlightRoute.entry;
+const { title = data.title, tagline, actions = [] } = data.hero || {};
+
+const latest = versions.at(-1)?.slug;
+const eyebrow = latest ? `ALIENSENSE NXS ${latest} / DOCUMENTATION` : 'ALIENSENSE NXS / DOCUMENTATION';
+---
+
+<section class="intro">
+	<div class="eyebrow">{eyebrow}</div>
+	<h1 id="_top" data-page-title set:html={title} />
+	{tagline && <p class="lede" set:html={tagline} />}
+	{
+		actions.length > 0 && (
+			<div class="actions">
+				{actions.map(
+					({ attrs: { class: className, ...attrs } = {}, icon, link: href, text, variant }) => (
+						<LinkButton {href} {variant} icon={icon?.name} class:list={[className]} {...attrs}>
+							{text}
+							{icon?.html && <Fragment set:html={icon.html} />}
+						</LinkButton>
+					)
+				)}
+			</div>
+		)
+	}
+</section>
